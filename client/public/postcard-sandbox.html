@@ -1,0 +1,411 @@
+<!doctype html>
+<html lang="en"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Postilion PostCard — Sandbox</title>
+<style>
+  *{box-sizing:border-box}
+  html,body{margin:0;height:100%;font-family:Tahoma,"Segoe UI",Arial,sans-serif;font-size:12px;color:#000}
+  #desktop{height:100vh;width:100vw;background:linear-gradient(180deg,#eef0f6,#d6d2e6);overflow:hidden;position:relative}
+  .deskbar{position:absolute;top:0;left:0;right:0;height:34px;background:linear-gradient(180deg,#f7f9fc,#e4e1ee);border-bottom:1px solid #b7accc;display:flex;align-items:center;gap:10px;padding:0 12px;font-size:12px;color:#423}
+  .deskbar b{color:#b5301c}.deskbar .sp{margin-left:auto;color:#6a5b80}
+  .icons{position:absolute;top:60px;left:30px;display:flex;flex-direction:column;gap:26px}
+  .dicon{width:114px;text-align:center;cursor:pointer;color:#2a1f4f;text-shadow:0 1px 0 #fff}
+  .dicon .img{width:64px;height:64px;margin:0 auto 6px;border-radius:12px;display:grid;place-items:center;font-size:30px;color:#fff;box-shadow:0 4px 10px rgba(0,0,0,.18)}
+  .dicon:hover .img{filter:brightness(1.06)}
+  .dicon.portal .img{background:linear-gradient(135deg,#e0492f,#b5301c)}
+  .dicon.console .img{background:linear-gradient(135deg,#6a4ec4,#3f2a86)}
+  .dicon .lbl{font-size:12px;font-weight:600;background:rgba(255,255,255,.4);border-radius:4px;padding:2px 4px;display:inline-block}
+  .taskbar{position:absolute;bottom:0;left:0;right:0;height:30px;background:linear-gradient(180deg,#6a4ec4,#3f2a86);display:flex;align-items:center;padding:0 8px;gap:6px}
+  .startbtn{background:linear-gradient(180deg,#5fa544,#3c7a2a);color:#fff;font-weight:700;border-radius:5px;padding:3px 14px;font-style:italic}
+  .taskitem{background:rgba(255,255,255,.16);color:#fff;border-radius:4px;padding:4px 10px;font-size:11px;cursor:pointer}
+  .clock{margin-left:auto;color:#fff;font-size:11px;background:rgba(0,0,0,.14);padding:4px 10px;border-radius:4px}
+  .win{position:absolute;background:#ece9d8;border:1px solid #0a246a;border-radius:8px 8px 0 0;box-shadow:0 14px 40px rgba(0,0,0,.35);display:none;flex-direction:column;overflow:hidden}
+  .win.show{display:flex}
+  .titlebar{height:30px;background:linear-gradient(180deg,#3f8be0,#1c5bb5 45%,#16469a);color:#fff;display:flex;align-items:center;padding:0 8px;gap:8px;font-weight:700;text-shadow:0 1px 1px rgba(0,0,0,.4)}
+  .titlebar .ti{font-size:12px}.titlebar .wbtns{margin-left:auto;display:flex;gap:4px}
+  .wbtn{width:21px;height:19px;border:1px solid rgba(255,255,255,.5);border-radius:3px;background:linear-gradient(180deg,#6fa8e8,#2f6fc4);color:#fff;font-size:11px;font-weight:700;display:grid;place-items:center;cursor:pointer}
+  .wbtn.close{background:linear-gradient(180deg,#e57a5a,#c23a1c)}
+  .menubar{height:22px;background:#f1efe2;border-bottom:1px solid #c7c3ad;display:flex;align-items:center;padding:0 4px;gap:2px;font-size:12px}
+  .menubar span{padding:2px 8px;border-radius:3px}.menubar span:hover{background:#d6e4f5}
+  .toolbar{height:30px;background:linear-gradient(180deg,#fbfaf5,#e9e6d6);border-bottom:1px solid #c7c3ad;display:flex;align-items:center;padding:0 6px;gap:6px}
+  .tbtn{display:flex;align-items:center;gap:5px;background:#fff;border:1px solid #b9b59c;border-radius:4px;padding:3px 9px;font-size:11px;cursor:pointer}
+  .tbtn:hover{background:#e8f0fb;border-color:#5a86c4}
+  .statusbar{height:20px;background:#ece9d8;border-top:1px solid #fff;display:flex;align-items:center;padding:0 8px;font-size:11px;color:#444;gap:14px}
+  .cbody{flex:1;display:flex;min-height:0;background:#fff}
+  .tree{width:240px;background:#fff;border-right:1px solid #b9c4d6;overflow:auto;padding:6px 0;font-size:12px}
+  .tnode{padding:3px 6px;cursor:pointer;white-space:nowrap;display:flex;align-items:center;gap:5px}
+  .tnode:hover{background:#eaf1fb}.tnode.sel{background:#316ac5;color:#fff}
+  .tnode .tw{width:12px;color:#888;font-size:10px}.tnode.sel .tw{color:#fff}
+  .tchild{display:none}.tchild.open{display:block}
+  .content{flex:1;overflow:auto;background:#fff}
+  .cbar{height:26px;background:linear-gradient(180deg,#eef3fb,#dbe6f6);border-bottom:1px solid #b9c4d6;display:flex;align-items:center;padding:0 10px;font-weight:700;color:#1c4f8f;font-size:12px}
+  table{border-collapse:collapse;width:100%;font-size:11.5px}
+  th{background:linear-gradient(180deg,#f5f6f8,#e4e8ee);border:1px solid #c4cbd6;padding:4px 7px;text-align:left;font-weight:700;color:#33405a;white-space:nowrap}
+  td{border:1px solid #d8dde6;padding:4px 7px}
+  .dot{width:9px;height:9px;border-radius:50%;display:inline-block;margin-right:5px;vertical-align:middle}
+  .g{background:#2faa4a}.y{background:#e3b53b}.r{background:#cf3a2a}.gray{background:#b6b6b6}
+  .btn{background:linear-gradient(180deg,#fdfdfd,#e6e6e6);border:1px solid #8a96a8;border-radius:4px;padding:4px 14px;font-size:12px;cursor:pointer}
+  .btn:hover{background:#eef4fd;border-color:#5a86c4}.btn.def{border-color:#1c5bb5;font-weight:700}
+  input,select{border:1px solid #8a96a8;border-radius:2px;padding:3px 5px;font-size:12px;font-family:inherit}
+  fieldset{border:1px solid #c4cbd6;border-radius:4px;margin:0 0 12px}
+  legend{font-weight:700;color:#1c4f8f;padding:0 6px}
+  .formgrid{display:grid;grid-template-columns:160px 1fr;gap:8px 12px;align-items:center;max-width:560px}
+  .formgrid label{color:#333;text-align:right}
+  .dlg-bg{position:absolute;inset:0;background:rgba(0,0,0,.25);display:none;place-items:center;z-index:60}
+  .dlg-bg.show{display:grid}
+  .dlg{background:#ece9d8;border:1px solid #0a246a;border-radius:8px 8px 0 0;box-shadow:0 16px 50px rgba(0,0,0,.4);width:470px;overflow:hidden}
+  .dlg .body{padding:16px}.dlg .foot{padding:0 16px 14px;display:flex;gap:8px;justify-content:flex-end}
+  /* portal */
+  .bchrome{background:linear-gradient(180deg,#f3f5f8,#dde3ec);border-bottom:1px solid #b9c4d6;padding:6px 8px;display:flex;gap:6px;align-items:center}
+  .bchrome .addr{flex:1;background:#fff;border:1px solid #9fb0c6;border-radius:11px;padding:3px 12px;font-size:11px;color:#234;font-family:Arial}
+  .bchrome .bnav{width:24px;height:22px;border:1px solid #aeb9c8;border-radius:4px;background:#fff;display:grid;place-items:center;color:#5a6b80;cursor:pointer}
+  .portal{font-family:Arial,Helvetica,sans-serif;background:#fff}
+  .p-top{background:linear-gradient(180deg,#fbfcfe,#eef2f7);border-bottom:1px solid #cfd8e4;display:flex;align-items:center;padding:8px 14px;gap:12px}
+  .s1mark{width:40px;height:40px;border-radius:7px;background:linear-gradient(135deg,#e0492f,#b5301c);color:#fff;font-weight:800;font-size:22px;font-style:italic;display:grid;place-items:center;box-shadow:0 2px 5px rgba(0,0,0,.2)}
+  .s1logo{display:flex;align-items:center;gap:8px}.s1logo .txt b{color:#b5301c;font-size:15px}.s1logo .txt span{color:#5a6b80;font-size:11px}
+  .p-user{margin-left:auto;font-size:11px;color:#5a6b80;text-align:right}.p-user a{color:#1c5bb5;cursor:pointer;text-decoration:underline}
+  .p-band{background:linear-gradient(180deg,#3a76c4,#22518f);color:#fff;font-size:12px;display:flex;flex-wrap:wrap}
+  .p-band .tab{padding:7px 15px;cursor:pointer;border-right:1px solid rgba(255,255,255,.18)}
+  .p-band .tab:hover{background:rgba(255,255,255,.12)}.p-band .tab.on{background:#fff;color:#1c4f8f;font-weight:700}
+  .p-main{display:flex;min-height:0;flex:1}
+  .p-menu{width:208px;background:#eef2f8;border-right:1px solid #cfd8e4;padding:8px 0;font-size:12px}
+  .p-menu .grp{font-weight:700;color:#1c4f8f;padding:7px 14px 3px;font-size:11px;text-transform:uppercase}
+  .p-menu a{display:block;padding:5px 22px;color:#234;cursor:pointer}.p-menu a:hover{background:#dce7f5}
+  .p-menu a.on{background:#cfe0f5;font-weight:700;border-left:3px solid #b5301c}
+  .p-content{flex:1;padding:14px 18px;overflow:auto;background:#fff}
+  .p-h{background:linear-gradient(180deg,#5a8ad0,#2f64ad);color:#fff;font-weight:700;padding:6px 12px;border-radius:4px 4px 0 0;font-size:12px;display:flex;align-items:center}
+  .p-h .howto{margin-left:auto;font-weight:400;font-size:11px;color:#dce7f5;cursor:pointer;text-decoration:underline}
+  .p-card{border:1px solid #cfd8e4;border-top:none;border-radius:0 0 4px 4px;padding:14px;margin-bottom:16px}
+  .p-formgrid{display:grid;grid-template-columns:150px 1fr 150px 1fr;gap:9px 12px;align-items:center;max-width:780px}
+  .p-formgrid label{text-align:right;color:#333;font-size:12px}
+  .p-btn{background:linear-gradient(180deg,#5a8ad0,#2f64ad);color:#fff;border:1px solid #22518f;border-radius:4px;padding:6px 18px;font-size:12px;cursor:pointer;font-weight:700}
+  .p-btn:hover{filter:brightness(1.07)}.p-btn.sec{background:linear-gradient(180deg,#fbfbfb,#e7e7e7);color:#234;border-color:#9aa6b6;font-weight:400}
+  .ptable th{background:linear-gradient(180deg,#dfe8f4,#c9d8ec);border:1px solid #b6c4da;color:#1c4f8f}
+  .ptable td{border:1px solid #dde3ec;font-size:11.5px}.ptable tr:nth-child(even) td{background:#f5f8fc}
+  .ptable tr.grow:hover td{background:#eaf3ff;cursor:pointer}
+  .pill{display:inline-block;font-size:10.5px;font-weight:700;padding:1px 8px;border-radius:10px}
+  .pill.ok{background:#dff3e4;color:#1f7a3a;border:1px solid #9fd8b0}.pill.no{background:#fbe2de;color:#b5301c;border:1px solid #f0b3a8}
+  .pill.w{background:#fdf3d6;color:#9a7b1a;border:1px solid #ecd98a}
+  .login-wrap{display:grid;place-items:center;flex:1;background:linear-gradient(135deg,#f3eef7,#ddd4ec)}
+  .login-card{background:#fff;border:1px solid #cfd8e4;border-radius:8px;box-shadow:0 10px 30px rgba(0,0,0,.15);width:370px;overflow:hidden}
+  .login-card .lh{background:linear-gradient(135deg,#e0492f,#b5301c);color:#fff;padding:16px;display:flex;align-items:center;gap:10px}
+  .login-card .lb{padding:18px}
+  .crumb{color:#5a6b80;font-size:11px;margin-bottom:10px}.crumb a{color:#1c5bb5;cursor:pointer;text-decoration:underline}
+  .tabrow{display:flex;gap:2px;border-bottom:1px solid #cfd8e4;margin-bottom:12px;flex-wrap:wrap}
+  .tabrow .t{padding:6px 11px;cursor:pointer;font-size:11.5px;border:1px solid transparent;border-bottom:none;white-space:nowrap}
+  .tabrow .t.on{background:#fff;border-color:#cfd8e4;border-radius:4px 4px 0 0;font-weight:700;color:#1c4f8f;margin-bottom:-1px}
+  .note{background:#fffbe6;border:1px solid #e8d986;border-radius:4px;padding:8px 10px;font-size:11.5px;color:#665;margin:10px 0}
+  .kvt{width:auto;min-width:420px}.kvt th{width:200px}
+</style></head>
+<body>
+<div id="desktop">
+  <div class="deskbar"><b>Postilion PostCard</b> — Sandbox &nbsp;·&nbsp; ACI Postilion® replica (training) <span class="sp">Double-click an icon to open</span></div>
+  <div class="icons">
+    <div class="dicon portal" onclick="openPortal()"><div class="img">S</div><div class="lbl">S1 Payment Portal</div></div>
+    <div class="dicon console" onclick="openConsole()"><div class="img">▣</div><div class="lbl">Cards Configuration Console</div></div>
+  </div>
+
+  <!-- S1 PORTAL -->
+  <div class="win" id="portalWin" style="left:150px;top:64px;width:960px;height:600px">
+    <div class="titlebar" style="background:linear-gradient(180deg,#7a8694,#5a6675)"><span class="ti">🌐 S1 Payment Portal — PostCard — Windows Internet Explorer</span>
+      <span class="wbtns"><span class="wbtn">_</span><span class="wbtn">▢</span><span class="wbtn close" onclick="hide('portalWin')">✕</span></span></div>
+    <div class="bchrome"><span class="bnav">◀</span><span class="bnav">▶</span><span class="addr" id="paddr">http://localhost/portal/</span><span class="bnav">↻</span></div>
+    <div id="portalApp" style="flex:1;display:flex;flex-direction:column;min-height:0"></div>
+  </div>
+
+  <!-- CARDS CONFIGURATION CONSOLE -->
+  <div class="win" id="consoleWin" style="left:130px;top:74px;width:860px;height:550px">
+    <div class="titlebar"><span class="ti">▣ Realtime Management Console — Cards Configuration</span>
+      <span class="wbtns"><span class="wbtn">_</span><span class="wbtn">▢</span><span class="wbtn close" onclick="hide('consoleWin')">✕</span></span></div>
+    <div class="menubar"><span>File</span><span>Favorites</span><span>Options</span><span>Help</span></div>
+    <div class="toolbar"><div class="tbtn" onclick="selectNode('products')">▤ Card Products</div><div class="tbtn" onclick="selectNode('bins')"># BINs</div><div class="tbtn" onclick="selectNode('limit')">⏱ Limit Profiles</div><div class="tbtn" onclick="selectNode('risk')">⚠ Risk Profiles</div></div>
+    <div class="cbody"><div class="tree" id="tree"></div><div class="content" id="cContent"></div></div>
+    <div class="statusbar"><span id="cStatus">Ready</span><span style="margin-left:auto">Server: BLUEBANK-RT · Cards Configuration Console</span></div>
+  </div>
+
+  <div class="dlg-bg" id="dlgBg"><div class="dlg" id="dlg"></div></div>
+  <div class="taskbar"><div class="startbtn">start</div>
+    <div class="taskitem" onclick="show('portalWin')">🌐 S1 Payment Portal</div>
+    <div class="taskitem" onclick="show('consoleWin')">▣ Cards Configuration</div>
+    <div class="clock" id="clock"></div></div>
+</div>
+
+<script>
+/* ===== mock data ===== */
+const CARDS=[
+  {pan:"5061004000000018",holder:"A. ADEYEMI",product:"Verve Gold",bin:"506100",status:"Active",expiry:"2807",customer:"CU001",pinTries:0,
+   accounts:[{id:"AC001",type:"Savings",avail:"185,000.00",ledger:"185,000.00",cur:"NGN",primary:true,hold:false},{id:"AC002",type:"Current",avail:"42,000.00",ledger:"42,000.00",cur:"NGN",primary:false,hold:false}],
+   limits:{daily:"200,000.00 / 6 txns",weekly:"800,000.00",monthly:"2,000,000.00",perTxn:"100,000.00"},
+   security:{pinVerify:"PVV (offset)",cvv:"Verified",emv:"Supported (ARQC)",mac:"Verified"},
+   addl:[{pan:"5061004000000034",type:"Secondary",holder:"R. ADEYEMI",status:"Active"}]},
+  {pan:"5061010000000019",holder:"F. MIJINDADI",product:"Verve Classic",bin:"506101",status:"Active",expiry:"2609",customer:"CU003",pinTries:0,
+   accounts:[{id:"AC005",type:"Savings",avail:"54,000.00",ledger:"54,000.00",cur:"NGN",primary:true,hold:false}],
+   limits:{daily:"100,000.00 / 4 txns",weekly:"400,000.00",monthly:"1,000,000.00",perTxn:"60,000.00"},
+   security:{pinVerify:"PVV (offset)",cvv:"Verified",emv:"Magstripe only",mac:"n/a"},addl:[]},
+  {pan:"5061010000000027",holder:"H. BELLO",product:"Verve Classic",bin:"506101",status:"Hot-card",expiry:"2412",customer:"CU004",pinTries:3,
+   accounts:[{id:"AC007",type:"Savings",avail:"3,000.00",ledger:"3,000.00",cur:"NGN",primary:true,hold:true}],
+   limits:{daily:"100,000.00 / 4 txns",weekly:"400,000.00",monthly:"1,000,000.00",perTxn:"60,000.00"},
+   security:{pinVerify:"PVV (offset)",cvv:"Verified",emv:"Magstripe only",mac:"n/a"},addl:[]},
+];
+const ACCOUNTS=[
+  {id:"AC001",customer:"CU001",type:"Savings",avail:"185,000.00",ledger:"185,000.00",cur:"NGN",status:"Open",hold:false,cards:["5061004000000018"]},
+  {id:"AC002",customer:"CU001",type:"Current",avail:"42,000.00",ledger:"42,000.00",cur:"NGN",status:"Open",hold:false,cards:["5061004000000018"]},
+  {id:"AC005",customer:"CU003",type:"Savings",avail:"54,000.00",ledger:"54,000.00",cur:"NGN",status:"Open",hold:false,cards:["5061010000000019"]},
+  {id:"AC007",customer:"CU004",type:"Savings",avail:"3,000.00",ledger:"3,000.00",cur:"NGN",status:"On hold",hold:true,cards:["5061010000000027"]},
+];
+const CUSTOMERS=[
+  {id:"CU001",name:"A. Adeyemi",type:"Retail",status:"Active",cards:["5061004000000018"],accounts:["AC001","AC002"]},
+  {id:"CU003",name:"F. Mijindadi",type:"Retail",status:"Active",cards:["5061010000000019"],accounts:["AC005"]},
+  {id:"CU004",name:"H. Bello",type:"Retail",status:"Suspended",cards:["5061010000000027"],accounts:["AC007"]},
+];
+const TXNS={
+  "5061004000000018":[{d:"2014-07-27 10:30",t:"Withdrawal",a:"10,000.00 NGN",rc:"00 Approved"},{d:"2014-07-27 10:32",t:"Balance Inquiry",a:"—",rc:"00 Approved"}],
+  "5061010000000019":[{d:"2014-07-27 11:02",t:"Withdrawal",a:"5,000.00 NGN",rc:"00 Approved"}],
+  "5061010000000027":[{d:"2014-07-27 11:20",t:"Withdrawal",a:"1,000.00 NGN",rc:"75 PIN tries exceeded"}],
+};
+const BINS=[{bin:"506100",scheme:"Verve",product:"Verve Gold",len:16,country:"NGA"},{bin:"506101",scheme:"Verve",product:"Verve Classic",len:16,country:"NGA"},{bin:"539841",scheme:"Verve",product:"Verve Gold",len:16,country:"NGA"}];
+const PROGRAMS=[{id:"VG","name":"Verve Gold Program",bins:"506100, 539841",cards:1,limit:"STANDARD-GOLD"},{id:"VC","name":"Verve Classic Program",bins:"506101",cards:2,limit:"STANDARD-CLASSIC"}];
+const LIMITPROF=[{id:"STANDARD-GOLD",cls:"Standard",daily:"200,000.00",dcount:6,weekly:"800,000.00",monthly:"2,000,000.00",perTxn:"100,000.00"},{id:"STANDARD-CLASSIC",cls:"Standard",daily:"100,000.00",dcount:4,weekly:"400,000.00",monthly:"1,000,000.00",perTxn:"60,000.00"}];
+const RISKPROF=[{id:"RK1",name:"Repeated PIN failure",type:"PIN failure",threshold:"3 tries",action:"Block card",on:true},{id:"RK2",name:"High-value withdrawal",type:"Amount over",threshold:"30,000.00",action:"Review",on:true},{id:"RK3",name:"Foreign ATM velocity",type:"Velocity",threshold:"5 / day",action:"Review",on:true}];
+
+/* ===== helpers ===== */
+function show(id){document.getElementById(id).classList.add('show');}
+function hide(id){document.getElementById(id).classList.remove('show');}
+function openPortal(){show('portalWin');portalLogin();}
+function openConsole(){show('consoleWin');consoleLogin();}
+function dlg(h){document.getElementById('dlg').innerHTML=h;document.getElementById('dlgBg').classList.add('show');}
+function closeDlg(){document.getElementById('dlgBg').classList.remove('show');}
+function tick(){document.getElementById('clock').textContent=new Date().toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'});}
+setInterval(tick,1000);tick();
+function statusPill(s){const m={"Active":"ok","Open":"ok","Hot-card":"no","Suspended":"no","On hold":"no","Blocked":"no"};return '<span class="pill '+(m[s]||'w')+'">'+s+'</span>';}
+
+/* ===== PORTAL ===== */
+let PNAV='cards', PVIEW='find', SELCARD=null, SELACC=null, SELCUST=null, CTAB='details';
+function portalLogin(){
+  document.getElementById('paddr').textContent='http://localhost/portal/Logon.bsm';
+  document.getElementById('portalApp').innerHTML=`<div class="login-wrap"><div class="login-card">
+    <div class="lh"><div class="s1mark">S</div><div><div style="font-size:16px;font-weight:800">S1 Payment Portal</div><div style="font-size:11px;opacity:.9">ACI Postilion® PostCard · BlueBank</div></div></div>
+    <div class="lb"><div style="font-weight:700;color:#1c4f8f;margin-bottom:10px">Log On</div>
+      <div class="formgrid" style="grid-template-columns:90px 1fr">
+        <label>Username:</label><input value="BlueBankEmployee">
+        <label>Password:</label><input type="password" value="password">
+        <label>Domain:</label><select><option>BlueBank Employees</option><option>BlueBank Customers</option></select>
+      </div>
+      <div style="margin-top:16px;display:flex;gap:8px;justify-content:flex-end"><button class="p-btn" onclick="PNAV='cards';PVIEW='find';portalRender()">Log On</button><button class="p-btn sec" onclick="hide('portalWin')">Cancel</button></div>
+      <div class="note" style="margin-top:14px">Financial-institution context. Navigation entitlements: Accounts, BINs, Cards, Card Programs, Ext Fields, Hold Response Codes, Limit Profiles, Retail Customers, Risk Profiles, Risk Item Groups, Statements.</div>
+    </div></div></div>`;
+}
+function portalRender(){
+  if(window._lastNav!==PNAV){window._pcq='';window._lastNav=PNAV;}
+  document.getElementById('paddr').textContent='http://localhost/portal/'+PNAV;
+  const mlink=(nav,lbl)=>`<a class="${PNAV===nav?'on':''}" onclick="PNAV='${nav}';PVIEW='find';portalRender()">${lbl}</a>`;
+  let body='';
+  if(PNAV==='cards') body = PVIEW==='inquiry'?cardInquiry():findCards();
+  else if(PNAV==='accounts') body = PVIEW==='inquiry'?acctInquiry():findAccounts();
+  else if(PNAV==='customers') body = PVIEW==='inquiry'?custInquiry():findCustomers();
+  else if(PNAV==='bins') body=listBins();
+  else if(PNAV==='programs') body=listPrograms();
+  else if(PNAV==='limits') body=listLimits();
+  else if(PNAV==='risk') body=listRisk();
+  else if(PNAV==='statements') body=`<div class="p-h">Statements</div><div class="p-card"><div class="p-formgrid"><label>Card / Account:</label><input value="5061004000000018"><label>Period:</label><select><option>July 2014</option></select></div><div style="margin-top:12px"><button class="p-btn" onclick="genStatement()">Generate Statement</button></div></div>`;
+  document.getElementById('portalApp').innerHTML=`<div class="portal" style="display:flex;flex-direction:column;flex:1;min-height:0">
+    <div class="p-top"><div class="s1logo"><div class="s1mark">S</div><div class="txt"><b>S1 Payment Portal</b><br><span>ACI Postilion® PostCard · BlueBank (Financial Institution)</span></div></div>
+      <div class="p-user">Logged on: <b>BlueBankEmployee</b><br>BlueBank Employees &nbsp;|&nbsp; <a onclick="portalLogin()">Log Off</a></div></div>
+    <div class="p-band">
+      ${['cards|Cards','accounts|Accounts','customers|Retail Customers','bins|BINs','programs|Card Programs','limits|Limit Profiles','risk|Risk Profiles','statements|Statements'].map(x=>{const[n,l]=x.split('|');return `<div class="tab ${PNAV===n?'on':''}" onclick="PNAV='${n}';PVIEW='find';portalRender()">${l}</div>`;}).join('')}
+    </div>
+    <div class="p-main">
+      <div class="p-menu">
+        <div class="grp">${PNAV}</div>
+        ${PNAV==='cards'?`<a class="${PVIEW==='find'?'on':''}" onclick="PVIEW='find';portalRender()">Find a Card</a><a onclick="pcCreate('cards')">Card Production (Create Card)</a>`:''}
+        ${PNAV==='accounts'?`<a class="on">Find an Account</a>`:''}
+        ${PNAV==='customers'?`<a class="on">Find a Customer</a>`:''}
+        ${['bins','programs','limits','risk','statements'].includes(PNAV)?`<a class="on">List</a><a onclick="pcCreate(PNAV)">Create New</a>`:''}
+        <div class="grp">Validation</div><a onclick="showValidation()">Validation Services</a>
+        <div class="grp">Help</div><a onclick="howto()">HowTo</a>
+      </div>
+      <div class="p-content">${body}</div>
+    </div></div>`;
+}
+function howto(){ dlg(`<div class="titlebar"><span class="ti">HowTo</span></div><div class="body"><b>HowTo: ${PNAV}</b><p style="color:#444">Every Portal screen has a HowTo link (top-right) documenting the steps for that task. This sandbox reproduces the layout from the ACI Postilion® PostCard Payments Basic Training manual.</p></div><div class="foot"><button class="btn def" onclick="closeDlg()">Close</button></div>`); }
+function showValidation(){ dlg(`<div class="titlebar"><span class="ti">Validation Services</span></div><div class="body" style="width:430px">
+  <p style="margin-top:0;color:#333">For each transaction PostCard applies these validation services:</p>
+  <table class="ptable"><tbody>
+  ${[["Card status","Active / Hot-card / Restricted"],["Card on hold","Block if card held"],["Account on hold","Block if account held"],["Expiry date checking","Field 14 vs card expiry"],["PIN verification","PVV / PVK offset"],["Card verification","CVV / CVV2 / iCVV"],["EMV authentication","ARQC, risk processing, scripts"],["Validation data matching","Track 2 / data elements"],["Address verification (AVS)","Postal / address match"],["Velocity checking","Predefined limit classes"]].map(r=>`<tr><th style="width:180px">${r[0]}</th><td>${r[1]}</td></tr>`).join('')}
+  </tbody></table></div><div class="foot"><button class="btn def" onclick="closeDlg()">Close</button></div>`); }
+
+function findCards(){
+  const q=(window._pcq||'').toLowerCase();
+  const list=CARDS.filter(c=>!q||c.pan.toLowerCase().includes(q)||c.holder.toLowerCase().includes(q)||c.product.toLowerCase().includes(q));
+  const rows=list.length?list.map(c=>`<tr class="grow" onclick="SELCARD='${c.pan}';CTAB='details';PVIEW='inquiry';portalRender()"><td><a style="color:#1c5bb5;text-decoration:underline">${c.pan}</a></td><td>${c.holder}</td><td>${c.product}</td><td>${c.expiry}</td><td>${statusPill(c.status)}</td></tr>`).join(''):`<tr><td colspan="5" style="color:#777">No cards match your search.</td></tr>`;
+  return `<div class="p-h">Cards — Find a Card</div><div class="p-card">
+    <div class="p-formgrid"><label>Search by:</label><select><option>PAN</option><option>Cardholder</option><option>Product</option></select><label>PAN / name:</label><input id="pcq" value="${window._pcq||''}" placeholder="(leave blank for all)">
+    <label>Card status:</label><select><option>Any</option><option>Active</option><option>Hot-card</option></select><label>&nbsp;</label><div></div></div>
+    <div style="margin-top:12px"><button class="p-btn" onclick="pcSearch()">Search</button> <button class="p-btn sec" onclick="pcReset()">Reset</button> <button class="p-btn sec" onclick="pcCreate('cards')">+ New Card</button></div></div>
+    <div class="p-h">Results (${list.length})</div><div class="p-card" style="padding:0"><table class="ptable"><thead><tr><th>PAN</th><th>Cardholder</th><th>Product</th><th>Expiry</th><th>Status</th></tr></thead><tbody>${rows}</tbody></table></div>`;
+}
+function cardInquiry(){
+  const c=CARDS.find(x=>x.pan===SELCARD)||CARDS[0];
+  const tabs=[['details','Card Details'],['customers','Customers'],['accounts','Linked Accounts'],['txns','Transactions'],['security','Security'],['addl','Additional Cards'],['limits','Limits'],['advlimits','Advanced Limits'],['ext','Extended Fields'],['emv','EMV Script Commands'],['updates','Record Updates']];
+  let panel='';
+  if(CTAB==='details') panel=`<table class="ptable kvt"><tbody><tr><th>PAN</th><td>${c.pan}</td></tr><tr><th>Cardholder</th><td>${c.holder}</td></tr><tr><th>Card product</th><td>${c.product}</td></tr><tr><th>BIN</th><td>${c.bin}</td></tr><tr><th>Expiry (YYMM)</th><td>${c.expiry}</td></tr><tr><th>Status</th><td>${statusPill(c.status)}</td></tr><tr><th>PIN tries</th><td>${c.pinTries}</td></tr></tbody></table>
+    <div style="margin-top:12px;display:flex;gap:8px"><button class="p-btn" onclick="cardAction('${c.pan}','block')">Block (Hot-card)</button><button class="p-btn sec" onclick="cardAction('${c.pan}','unblock')">Activate</button><button class="p-btn sec" onclick="cardAction('${c.pan}','resetpin')">Reset PIN tries</button></div>`;
+  else if(CTAB==='customers') panel=tableOf(['Customer ID','Name','Type'],[[c.customer,(CUSTOMERS.find(x=>x.id===c.customer)||{}).name||'',(CUSTOMERS.find(x=>x.id===c.customer)||{}).type||'']]);
+  else if(CTAB==='accounts') panel=`<table class="ptable"><thead><tr><th>Account</th><th>Type</th><th>Available</th><th>Ledger</th><th>Primary</th><th>Status</th></tr></thead><tbody>${c.accounts.map(a=>`<tr class="grow" onclick="SELACC='${a.id}';PNAV='accounts';PVIEW='inquiry';portalRender()"><td>${a.id}</td><td>${a.type}</td><td>${a.avail} ${a.cur}</td><td>${a.ledger} ${a.cur}</td><td>${a.primary?'★':''}</td><td>${a.hold?statusPill('On hold'):statusPill('Open')}</td></tr>`).join('')}</tbody></table>`;
+  else if(CTAB==='txns') panel=tableOf(['Date/Time','Type','Amount','Result'],(TXNS[c.pan]||[]).map(t=>[t.d,t.t,t.a,t.rc]));
+  else if(CTAB==='security') panel=`<table class="ptable kvt"><tbody><tr><th>PIN verification</th><td>${c.security.pinVerify}</td></tr><tr><th>Card verification (CVV)</th><td>${c.security.cvv}</td></tr><tr><th>EMV authentication</th><td>${c.security.emv}</td></tr><tr><th>Message authentication (MAC)</th><td>${c.security.mac}</td></tr></tbody></table>`;
+  else if(CTAB==='addl') panel=c.addl.length?tableOf(['PAN','Type','Holder','Status'],c.addl.map(a=>[a.pan,a.type,a.holder,a.status])):'<div class="note">No additional or temporary cards linked.</div>';
+  else if(CTAB==='limits') panel=`<table class="ptable kvt"><tbody><tr><th>Daily limit</th><td>${c.limits.daily}</td></tr><tr><th>Weekly limit</th><td>${c.limits.weekly}</td></tr><tr><th>Monthly limit</th><td>${c.limits.monthly}</td></tr><tr><th>Per-transaction</th><td>${c.limits.perTxn}</td></tr></tbody></table><div class="note">Predefined limit classes are managed in <b>Limit Profiles</b>.</div>`;
+  else if(CTAB==='advlimits') panel='<div class="note">No user-defined (advanced) limits configured. Advanced limits override the predefined limit class on the Limits tab.</div>';
+  else if(CTAB==='ext') panel='<div class="note">No extended fields configured for this card.</div>';
+  else if(CTAB==='emv') panel=tableOf(['Script ID','Command','Status'],[['81','PIN unblock','Pending'],['82','Update risk parameters','Sent']]);
+  else if(CTAB==='updates') panel=tableOf(['Date/Time','Action','By'],[['2014-07-27 11:21','Status → Hot-card (risk RK1)','system'],['2014-07-20 09:00','Card issued','BlueBankEmployee']]);
+  return `<div class="crumb"><a onclick="PVIEW='find';portalRender()">Cards</a> › Find a Card › <b>Card Inquiry</b></div>
+  <div class="p-h">Card Inquiry — ${c.pan} <span class="howto" onclick="howto()">HowTo ?</span></div>
+  <div class="p-card"><div class="tabrow">${tabs.map(t=>`<div class="t ${CTAB===t[0]?'on':''}" onclick="CTAB='${t[0]}';portalRender()">${t[1]}</div>`).join('')}</div>${panel}</div>`;
+}
+function cardAction(pan,act){ const c=CARDS.find(x=>x.pan===pan); if(act==='block'){c.status='Hot-card';} if(act==='unblock'){c.status='Active';c.pinTries=0;} if(act==='resetpin'){c.pinTries=0;} portalRender(); }
+function tableOf(cols,rows){ return `<table class="ptable"><thead><tr>${cols.map(c=>`<th>${c}</th>`).join('')}</tr></thead><tbody>${rows.length?rows.map(r=>`<tr><td>${r.join('</td><td>')}</td></tr>`).join(''):`<tr><td colspan="${cols.length}" style="color:#777">None.</td></tr>`}</tbody></table>`; }
+
+function findAccounts(){
+  const q=(window._pcq||'').toLowerCase();
+  const list=ACCOUNTS.filter(a=>!q||a.id.toLowerCase().includes(q)||a.customer.toLowerCase().includes(q)||a.type.toLowerCase().includes(q));
+  const rows=list.length?list.map(a=>`<tr class="grow" onclick="SELACC='${a.id}';PVIEW='inquiry';portalRender()"><td><a style="color:#1c5bb5;text-decoration:underline">${a.id}</a></td><td>${a.customer}</td><td>${a.type}</td><td>${a.avail} ${a.cur}</td><td>${a.hold?statusPill('On hold'):statusPill('Open')}</td></tr>`).join(''):`<tr><td colspan="5" style="color:#777">No accounts match.</td></tr>`;
+  return `<div class="p-h">Accounts — Find an Account</div><div class="p-card"><div class="p-formgrid"><label>Account / customer:</label><input id="pcq" value="${window._pcq||''}" placeholder="(leave blank for all)"><label>&nbsp;</label><div></div></div><div style="margin-top:12px"><button class="p-btn" onclick="pcSearch()">Search</button> <button class="p-btn sec" onclick="pcReset()">Reset</button> <button class="p-btn sec" onclick="pcCreate('accounts')">+ New Account</button></div></div>
+  <div class="p-h">Results (${list.length})</div><div class="p-card" style="padding:0"><table class="ptable"><thead><tr><th>Account</th><th>Customer</th><th>Type</th><th>Available</th><th>Status</th></tr></thead><tbody>${rows}</tbody></table></div>`;
+}
+function acctInquiry(){
+  const a=ACCOUNTS.find(x=>x.id===SELACC)||ACCOUNTS[0];
+  return `<div class="crumb"><a onclick="PVIEW='find';portalRender()">Accounts</a> › <b>Account Inquiry</b></div>
+  <div class="p-h">Account Inquiry — ${a.id} <span class="howto" onclick="howto()">HowTo ?</span></div>
+  <div class="p-card"><table class="ptable kvt"><tbody>
+    <tr><th>Account number</th><td>${a.id}</td></tr><tr><th>Customer</th><td>${a.customer}</td></tr><tr><th>Type</th><td>${a.type}</td></tr>
+    <tr><th>Available balance</th><td><b>${a.avail} ${a.cur}</b></td></tr><tr><th>Ledger balance</th><td>${a.ledger} ${a.cur}</td></tr>
+    <tr><th>Status</th><td>${a.hold?statusPill('On hold'):statusPill('Open')}</td></tr></tbody></table>
+    <div style="font-weight:700;color:#1c4f8f;margin:12px 0 5px">Linked cards</div>
+    <table class="ptable"><thead><tr><th>PAN</th><th>Product</th></tr></thead><tbody>${a.cards.map(p=>{const c=CARDS.find(x=>x.pan===p);return `<tr><td>${p}</td><td>${c?c.product:''}</td></tr>`;}).join('')}</tbody></table>
+    <div style="margin-top:12px;display:flex;gap:8px"><button class="p-btn" onclick="acctHold('${a.id}',true)">Place Hold</button><button class="p-btn sec" onclick="acctHold('${a.id}',false)">Release Hold</button></div>
+  </div>`;
+}
+function acctHold(id,v){const a=ACCOUNTS.find(x=>x.id===id);a.hold=v;a.status=v?'On hold':'Open';portalRender();}
+function findCustomers(){
+  const q=(window._pcq||'').toLowerCase();
+  const list=CUSTOMERS.filter(c=>!q||c.id.toLowerCase().includes(q)||c.name.toLowerCase().includes(q));
+  const rows=list.length?list.map(c=>`<tr class="grow" onclick="SELCUST='${c.id}';PVIEW='inquiry';portalRender()"><td><a style="color:#1c5bb5;text-decoration:underline">${c.id}</a></td><td>${c.name}</td><td>${c.type}</td><td>${statusPill(c.status)}</td></tr>`).join(''):`<tr><td colspan="4" style="color:#777">No customers match.</td></tr>`;
+  return `<div class="p-h">Retail Customers — Find a Customer</div><div class="p-card"><div class="p-formgrid"><label>Customer ID / name:</label><input id="pcq" value="${window._pcq||''}" placeholder="(leave blank for all)"><label>&nbsp;</label><div></div></div><div style="margin-top:12px"><button class="p-btn" onclick="pcSearch()">Search</button> <button class="p-btn sec" onclick="pcReset()">Reset</button> <button class="p-btn sec" onclick="pcCreate('customers')">+ New Customer</button></div></div>
+  <div class="p-h">Results (${list.length})</div><div class="p-card" style="padding:0"><table class="ptable"><thead><tr><th>Customer ID</th><th>Name</th><th>Type</th><th>Status</th></tr></thead><tbody>${rows}</tbody></table></div>`;
+}
+function custInquiry(){
+  const c=CUSTOMERS.find(x=>x.id===SELCUST)||CUSTOMERS[0];
+  return `<div class="crumb"><a onclick="PVIEW='find';portalRender()">Retail Customers</a> › <b>Customer Inquiry</b></div>
+  <div class="p-h">Customer Inquiry — ${c.id} <span class="howto" onclick="howto()">HowTo ?</span></div>
+  <div class="p-card"><table class="ptable kvt"><tbody><tr><th>Customer ID</th><td>${c.id}</td></tr><tr><th>Name</th><td>${c.name}</td></tr><tr><th>Type</th><td>${c.type}</td></tr><tr><th>Status</th><td>${statusPill(c.status)}</td></tr></tbody></table>
+    <div style="font-weight:700;color:#1c4f8f;margin:12px 0 5px">Linked cards</div>
+    <table class="ptable"><thead><tr><th>PAN</th><th>Product</th><th>Status</th></tr></thead><tbody>${c.cards.map(p=>{const cd=CARDS.find(x=>x.pan===p);return `<tr class="grow" onclick="SELCARD='${p}';CTAB='details';PNAV='cards';PVIEW='inquiry';portalRender()"><td>${p}</td><td>${cd?cd.product:''}</td><td>${cd?statusPill(cd.status):''}</td></tr>`;}).join('')}</tbody></table>
+    <div style="font-weight:700;color:#1c4f8f;margin:12px 0 5px">Linked accounts</div>
+    <table class="ptable"><thead><tr><th>Account</th><th>Type</th><th>Available</th></tr></thead><tbody>${c.accounts.map(id=>{const a=ACCOUNTS.find(x=>x.id===id);return `<tr><td>${id}</td><td>${a?a.type:''}</td><td>${a?a.avail+' '+a.cur:''}</td></tr>`;}).join('')}</tbody></table></div>`;
+}
+function listBins(){return `<div class="p-h">BINs</div><div class="p-card" style="padding:0"><table class="ptable"><thead><tr><th>BIN</th><th>Scheme</th><th>Card product</th><th>PAN length</th><th>Country</th></tr></thead><tbody>${BINS.map(b=>`<tr class="grow"><td>${b.bin}</td><td>${b.scheme}</td><td>${b.product}</td><td>${b.len}</td><td>${b.country}</td></tr>`).join('')}</tbody></table></div>`;}
+function listPrograms(){return `<div class="p-h">Card Programs</div><div class="p-card" style="padding:0"><table class="ptable"><thead><tr><th>ID</th><th>Name</th><th>BINs</th><th>Cards</th><th>Limit profile</th></tr></thead><tbody>${PROGRAMS.map(p=>`<tr class="grow"><td>${p.id}</td><td>${p.name}</td><td>${p.bins}</td><td>${p.cards}</td><td>${p.limit}</td></tr>`).join('')}</tbody></table></div>`;}
+function listLimits(){return `<div class="p-h">Limit Profiles (predefined limit classes)</div><div class="p-card" style="padding:0"><table class="ptable"><thead><tr><th>Profile</th><th>Class</th><th>Daily</th><th>Daily count</th><th>Weekly</th><th>Monthly</th><th>Per-txn</th></tr></thead><tbody>${LIMITPROF.map(l=>`<tr class="grow"><td>${l.id}</td><td>${l.cls}</td><td>${l.daily}</td><td>${l.dcount}</td><td>${l.weekly}</td><td>${l.monthly}</td><td>${l.perTxn}</td></tr>`).join('')}</tbody></table></div><div class="note">Velocity checking uses these predefined limit classes; advanced (user-defined) limits override them per card.</div>`;}
+function listRisk(){return `<div class="p-h">Risk Profiles — Risk Conditions</div><div class="p-card" style="padding:0"><table class="ptable"><thead><tr><th>ID</th><th>Name</th><th>Condition</th><th>Threshold</th><th>Action</th><th>Enabled</th></tr></thead><tbody>${RISKPROF.map(r=>`<tr class="grow"><td>${r.id}</td><td>${r.name}</td><td>${r.type}</td><td>${r.threshold}</td><td>${r.action}</td><td>${r.on?statusPill('Active'):statusPill('Blocked')}</td></tr>`).join('')}</tbody></table></div><div class="note">Risk conditions are grouped into Risk Item Groups and applied during authorization (Risk Management).</div>`;}
+
+/* ===== CARDS CONFIGURATION CONSOLE (Realtime Management Console) ===== */
+function consoleLogin(){
+  dlg(`<div class="titlebar"><span class="ti">Connect to Cards Configuration Console</span></div><div class="body">
+   <div style="display:flex;gap:12px"><div style="font-size:34px">🔐</div><div style="flex:1">
+   <div style="margin-bottom:8px;color:#333">Log on to the Realtime database to configure cards.</div>
+   <div class="formgrid" style="grid-template-columns:100px 1fr"><label>User name:</label><input value="upostcfg"><label>Password:</label><input type="password" value="postilion"><label>Server:</label><input value="BLUEBANK-RT"></div>
+   </div></div></div>
+   <div class="foot"><button class="btn def" onclick="closeDlg();buildTree();selectNode('overview')">OK</button><button class="btn" onclick="closeDlg();hide('consoleWin')">Cancel</button></div>`);
+}
+const TREE=[{id:'root',label:'Cards Configuration Console',icon:'▣',children:[
+  {id:'products',label:'Card Products',icon:'▤'},{id:'bins',label:'BINs',icon:'#'},
+  {id:'accttypes',label:'Account Types',icon:'$'},{id:'limit',label:'Limit Profiles',icon:'⏱'},
+  {id:'risk',label:'Risk Profiles',icon:'⚠'},{id:'hold',label:'Hold Response Codes',icon:'⛔'}]}];
+let SEL='overview';
+function buildTree(){const open={root:1};
+  function r(nodes,d){return nodes.map(n=>{const k=n.children&&n.children.length;const tw=k?(open[n.id]?'▾':'▸'):'';
+    let h=`<div class="tnode ${SEL===n.id?'sel':''}" style="padding-left:${6+d*14}px" onclick="tc('${n.id}',${k?1:0})"><span class="tw">${tw}</span><span>${n.icon}</span><span>${n.label}</span></div>`;
+    if(k)h+=`<div class="tchild ${open[n.id]?'open':''}" id="ch_${n.id}">${r(n.children,d+1)}</div>`;return h;}).join('');}
+  window._o=open;document.getElementById('tree').innerHTML=r(TREE,0);}
+function tc(id,k){if(k){const c=document.getElementById('ch_'+id);if(c){c.classList.toggle('open');window._o[id]=c.classList.contains('open');}}selectNode(id);}
+function selectNode(id){SEL=id;buildTree();renderC(id);}
+function renderC(id){const c=document.getElementById('cContent');const st=document.getElementById('cStatus');
+  if(id==='products'){st.textContent='Card Products';c.innerHTML=`<div class="cbar">Card Products</div><div style="padding:12px"><table><thead><tr><th>Product</th><th>BINs</th><th>Issuer</th><th>On-us</th><th>PIN verify</th></tr></thead><tbody>
+    <tr ondblclick="prodDlg('Verve Gold')" style="cursor:default"><td>Verve Gold</td><td>506100, 539841</td><td>BlueBank</td><td>Yes</td><td>PostCard (PVV)</td></tr>
+    <tr ondblclick="prodDlg('Verve Classic')"><td>Verve Classic</td><td>506101</td><td>BlueBank</td><td>Yes</td><td>PostCard (PVV)</td></tr></tbody></table>
+    <div style="margin-top:10px"><button class="btn" onclick="prodDlg('Verve Gold')">Properties…</button></div></div>`;return;}
+  if(id==='bins'){st.textContent='BINs';c.innerHTML='<div class="cbar">BINs</div><div style="padding:12px">'+tableOf(['BIN','Scheme','Product','PAN length','Country'],BINS.map(b=>[b.bin,b.scheme,b.product,b.len,b.country]))+'</div>';return;}
+  if(id==='limit'){st.textContent='Limit Profiles';c.innerHTML='<div class="cbar">Limit Profiles</div><div style="padding:12px">'+tableOf(['Profile','Class','Daily','Count','Weekly','Monthly','Per-txn'],LIMITPROF.map(l=>[l.id,l.cls,l.daily,l.dcount,l.weekly,l.monthly,l.perTxn]))+'</div>';return;}
+  if(id==='risk'){st.textContent='Risk Profiles';c.innerHTML='<div class="cbar">Risk Profiles — Risk Conditions</div><div style="padding:12px">'+tableOf(['ID','Name','Condition','Threshold','Action','Enabled'],RISKPROF.map(r=>[r.id,r.name,r.type,r.threshold,r.action,r.on?'Yes':'No']))+'</div>';return;}
+  if(id==='accttypes'){st.textContent='Account Types';c.innerHTML='<div class="cbar">Account Types</div><div style="padding:12px">'+tableOf(['Code','Description','Default'],[['SAV','Savings','Yes'],['CUR','Current','No'],['DEF','Default','No']])+'</div>';return;}
+  if(id==='hold'){st.textContent='Hold Response Codes';c.innerHTML='<div class="cbar">Hold Response Codes</div><div style="padding:12px">'+tableOf(['Code','Meaning'],[['43','Hot-card — pick up'],['62','Restricted card'],['58','Account on hold']])+'</div>';return;}
+  st.textContent='Ready';
+  c.innerHTML=`<div class="cbar">Cards Configuration Console</div><div style="padding:16px;max-width:620px;color:#333">
+   <p style="margin-top:0">The <b>Cards Configuration Console</b> (within the Realtime Management Console) is where PostCard card configuration is performed.</p>
+   <ul style="line-height:1.9"><li><b>Card Products</b> — match transactions by BIN; set accounts, PIN verification, limits, allowed transactions and routing.</li>
+   <li><b>BINs</b> — BIN ranges and the products they map to.</li><li><b>Limit Profiles</b> — predefined velocity limit classes.</li>
+   <li><b>Risk Profiles</b> — risk conditions and item groups.</li><li><b>Hold Response Codes</b> — codes returned when a card/account is held.</li></ul>
+   <div class="note">Day-to-day card, account and customer enquiry is done in the <b>S1 Payment Portal</b>.</div></div>`;
+}
+function prodDlg(name){dlg(`<div class="titlebar"><span class="ti">Card Product — ${name}</span></div><div class="body">
+  <div class="tabrow"><div class="t on">General</div><div class="t">Card processing</div><div class="t">Allowed transactions</div><div class="t">Limits</div><div class="t">Routing</div></div>
+  <fieldset><legend>Card product</legend><div class="formgrid">
+   <label>Name:</label><input value="${name}"><label>Issuer:</label><input value="BlueBank">
+   <label>BINs:</label><input value="${name==='Verve Gold'?'506100, 539841':'506101'}"><label>PIN verification:</label><select><option>PostCard (PVV)</option><option>Issuer</option></select>
+   <label>Expiry date check:</label><select><option>Yes</option><option>No</option></select><label>Limit profile:</label><select><option>${name==='Verve Gold'?'STANDARD-GOLD':'STANDARD-CLASSIC'}</option></select>
+   <label>Allowed transactions:</label><input value="WDL, BAL, TRF, PURCHASE, MINI"></div></fieldset></div>
+  <div class="foot"><button class="btn def" onclick="closeDlg()">Save</button><button class="btn" onclick="closeDlg()">Cancel</button></div>`);}
+
+/* ===== working CTAs: search / create / statement ===== */
+function pcSearch(){ const el=document.getElementById('pcq'); window._pcq=el?el.value:''; portalRender(); }
+function pcReset(){ window._pcq=''; portalRender(); }
+function fld(id,label,val,opts){ if(opts){ return `<label>${label}</label><select id="${id}">`+opts.map(o=>`<option ${o===val?'selected':''}>${o}</option>`).join('')+`</select>`; } return `<label>${label}</label><input id="${id}" value="${val||''}">`; }
+function gv(id){ const e=document.getElementById(id); return e?e.value.trim():''; }
+function toastPC(m){ const d=document.createElement('div'); d.textContent=m; d.style.cssText='position:fixed;bottom:40px;left:50%;transform:translateX(-50%);background:#1c4f8f;color:#fff;padding:8px 18px;border-radius:6px;z-index:99;font-family:Arial;font-size:12px;box-shadow:0 6px 18px rgba(0,0,0,.3)'; document.getElementById('desktop').appendChild(d); setTimeout(()=>d.remove(),1800); }
+function pcCreate(kind){
+  let title, body;
+  if(kind==='cards'){ title='Create Card (Card Production)';
+    body=`<div class="formgrid">${fld('npan','PAN','5061004000000050')}${fld('nholder','Cardholder','NEW CARDHOLDER')}${fld('nprod','Card product','Verve Gold',CARDS.map(c=>c.product).filter((v,i,a)=>a.indexOf(v)===i))}${fld('nexp','Expiry (YYMM)','2812')}${fld('npin','PIN','1357')}${fld('nacct','Link account','AC001',ACCOUNTS.map(a=>a.id))}</div>`; }
+  else if(kind==='accounts'){ title='Create Account';
+    body=`<div class="formgrid">${fld('nid','Account number','AC0'+(ACCOUNTS.length+10))}${fld('ncust','Customer','CU001',CUSTOMERS.map(c=>c.id))}${fld('ntype','Type','Savings',['Savings','Current','Default'])}${fld('navail','Available balance','100000.00')}${fld('ncur','Currency','NGN',['NGN','USD'])}</div>`; }
+  else if(kind==='customers'){ title='Create Customer';
+    body=`<div class="formgrid">${fld('nid','Customer ID','CU0'+(CUSTOMERS.length+10))}${fld('nname','Name','New Customer')}${fld('ntype','Type','Retail',['Retail','Corporate','Foreign'])}</div>`; }
+  else if(kind==='bins'){ title='Create BIN';
+    body=`<div class="formgrid">${fld('nbin','BIN','627000')}${fld('nscheme','Scheme','Verve',['Verve','Visa','Mastercard'])}${fld('nprod','Card product','Verve Gold')}${fld('nlen','PAN length','16')}${fld('ncountry','Country','NGA')}</div>`; }
+  else if(kind==='programs'){ title='Create Card Program';
+    body=`<div class="formgrid">${fld('nid','Program ID','VP'+(PROGRAMS.length+1))}${fld('nname','Name','New Program')}${fld('nbins','BINs','627000')}${fld('nlimit','Limit profile','STANDARD-GOLD',LIMITPROF.map(l=>l.id))}</div>`; }
+  else if(kind==='limits'){ title='Create Limit Profile';
+    body=`<div class="formgrid">${fld('nid','Profile ID','STANDARD-NEW')}${fld('ncls','Class','Standard',['Standard','Premium','Restricted'])}${fld('ndaily','Daily','150,000.00')}${fld('ndcount','Daily count','5')}${fld('nweekly','Weekly','600,000.00')}${fld('nmonthly','Monthly','1,500,000.00')}${fld('npertxn','Per-transaction','80,000.00')}</div>`; }
+  else if(kind==='risk'){ title='Create Risk Condition';
+    body=`<div class="formgrid">${fld('nid','Risk ID','RK'+(RISKPROF.length+1))}${fld('nname','Name','New Risk Condition')}${fld('ntype','Condition','Amount over',['PIN failure','Amount over','Velocity'])}${fld('nthreshold','Threshold','50,000.00')}${fld('naction','Action','Review',['Block card','Review','Decline'])}</div>`; }
+  else { toastPC('Nothing to create here'); return; }
+  dlg(`<div class="titlebar"><span class="ti">${title}</span></div><div class="body"><fieldset><legend>New record</legend>${body}</fieldset></div><div class="foot"><button class="btn def" onclick="pcSaveNew('${kind}')">Save</button><button class="btn" onclick="closeDlg()">Cancel</button></div>`);
+}
+function pcSaveNew(kind){
+  if(kind==='cards'){ const pan=gv('npan'); const acct=ACCOUNTS.find(a=>a.id===gv('nacct'))||ACCOUNTS[0];
+    CARDS.push({pan,holder:gv('nholder'),product:gv('nprod'),bin:pan.slice(0,6),status:'Active',expiry:gv('nexp'),customer:acct.customer,pinTries:0,
+      accounts:[{id:acct.id,type:acct.type,avail:acct.avail,ledger:acct.ledger,cur:acct.cur,primary:true,hold:acct.hold}],
+      limits:{daily:'150,000.00 / 5 txns',weekly:'600,000.00',monthly:'1,500,000.00',perTxn:'80,000.00'},
+      security:{pinVerify:'PVV (offset)',cvv:'Verified',emv:'Supported (ARQC)',mac:'Verified'},addl:[]});
+    if(!acct.cards.includes(pan)) acct.cards.push(pan); TXNS[pan]=[]; }
+  else if(kind==='accounts'){ const id=gv('nid'); ACCOUNTS.push({id,customer:gv('ncust'),type:gv('ntype'),avail:gv('navail'),ledger:gv('navail'),cur:gv('ncur'),status:'Open',hold:false,cards:[]}); const cu=CUSTOMERS.find(c=>c.id===gv('ncust')); if(cu&&!cu.accounts.includes(id))cu.accounts.push(id); }
+  else if(kind==='customers'){ CUSTOMERS.push({id:gv('nid'),name:gv('nname'),type:gv('ntype'),status:'Active',cards:[],accounts:[]}); }
+  else if(kind==='bins'){ BINS.push({bin:gv('nbin'),scheme:gv('nscheme'),product:gv('nprod'),len:Number(gv('nlen'))||16,country:gv('ncountry')}); }
+  else if(kind==='programs'){ PROGRAMS.push({id:gv('nid'),name:gv('nname'),bins:gv('nbins'),cards:0,limit:gv('nlimit')}); }
+  else if(kind==='limits'){ LIMITPROF.push({id:gv('nid'),cls:gv('ncls'),daily:gv('ndaily'),dcount:Number(gv('ndcount'))||0,weekly:gv('nweekly'),monthly:gv('nmonthly'),perTxn:gv('npertxn')}); }
+  else if(kind==='risk'){ RISKPROF.push({id:gv('nid'),name:gv('nname'),type:gv('ntype'),threshold:gv('nthreshold'),action:gv('naction'),on:true}); }
+  closeDlg(); window._pcq=''; portalRender(); toastPC('Record created');
+}
+function genStatement(){
+  dlg(`<div class="titlebar"><span class="ti">Statement</span></div><div class="body" style="width:430px">
+   <div style="font-family:Arial"><b>BlueBank — Card Statement</b><br>Card 5061004000000018 · A. ADEYEMI · July 2014</div>
+   <table class="ptable" style="margin-top:8px"><thead><tr><th>Date</th><th>Description</th><th>Amount</th><th>Balance</th></tr></thead><tbody>
+   <tr><td>2014-07-27</td><td>ATM Withdrawal ATM00001</td><td>-10,000.00</td><td>175,000.00</td></tr>
+   <tr><td>2014-07-27</td><td>Balance Inquiry</td><td>—</td><td>175,000.00</td></tr></tbody></table></div>
+   <div class="foot"><button class="btn def" onclick="closeDlg()">Close</button></div>`);
+}
+
+</script>
+</body></html>

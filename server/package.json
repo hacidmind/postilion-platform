@@ -1,0 +1,21 @@
+{
+  "name": "postilion-platform-server",
+  "version": "1.0.0",
+  "type": "module",
+  "description": "Postilion-style payments platform — backend (Realtime switch, PostCard, Office, ATM driving)",
+  "main": "src/index.js",
+  "scripts": {
+    "start": "node src/index.js",
+    "dev": "node --watch src/index.js",
+    "test": "node src/test.js",
+    "seed": "node src/seed.js --reset"
+  },
+  "dependencies": {
+    "cors": "^2.8.5",
+    "express": "^4.21.2",
+    "ws": "^8.18.0"
+  },
+  "engines": {
+    "node": ">=22.5"
+  }
+}

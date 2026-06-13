@@ -1,0 +1,410 @@
+<!doctype html>
+<html lang="en"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Postilion Realtime — Sandbox</title>
+<style>
+  *{box-sizing:border-box}
+  html,body{margin:0;height:100%;font-family:Tahoma,"Segoe UI",Arial,sans-serif;font-size:12px;color:#000}
+  #desktop{height:100vh;width:100vw;background:linear-gradient(180deg,#e8eef7,#c8d6ea);overflow:hidden;position:relative}
+  .deskbar{position:absolute;top:0;left:0;right:0;height:34px;background:linear-gradient(180deg,#f7f9fc,#dce6f2);border-bottom:1px solid #a9b9cf;display:flex;align-items:center;gap:10px;padding:0 12px;font-size:12px;color:#244}
+  .deskbar b{color:#b5301c}.deskbar .sp{margin-left:auto;color:#5a6b80}
+  .icons{position:absolute;top:60px;left:30px;display:flex;flex-direction:column;gap:26px}
+  .dicon{width:120px;text-align:center;cursor:pointer;color:#16324f;text-shadow:0 1px 0 #fff}
+  .dicon .img{width:64px;height:64px;margin:0 auto 6px;border-radius:12px;display:grid;place-items:center;font-size:28px;color:#fff;box-shadow:0 4px 10px rgba(0,0,0,.18);background:linear-gradient(135deg,#2f7d4f,#1c5b38)}
+  .dicon:hover .img{filter:brightness(1.07)}
+  .dicon .lbl{font-size:12px;font-weight:600;background:rgba(255,255,255,.4);border-radius:4px;padding:2px 4px;display:inline-block}
+  .taskbar{position:absolute;bottom:0;left:0;right:0;height:30px;background:linear-gradient(180deg,#2f7d4f,#1c5b38);display:flex;align-items:center;padding:0 8px;gap:6px}
+  .startbtn{background:linear-gradient(180deg,#5fa544,#3c7a2a);color:#fff;font-weight:700;border-radius:5px;padding:3px 14px;font-style:italic}
+  .taskitem{background:rgba(255,255,255,.16);color:#fff;border-radius:4px;padding:4px 10px;font-size:11px;cursor:pointer}
+  .clock{margin-left:auto;color:#fff;font-size:11px;background:rgba(0,0,0,.14);padding:4px 10px;border-radius:4px}
+  .win{position:absolute;background:#ece9d8;border:1px solid #0a246a;border-radius:8px 8px 0 0;box-shadow:0 14px 40px rgba(0,0,0,.35);display:none;flex-direction:column;overflow:hidden}
+  .win.show{display:flex}
+  .titlebar{height:30px;background:linear-gradient(180deg,#3f8be0,#1c5bb5 45%,#16469a);color:#fff;display:flex;align-items:center;padding:0 8px;gap:8px;font-weight:700;text-shadow:0 1px 1px rgba(0,0,0,.4)}
+  .titlebar .ti{font-size:12px}.titlebar .wbtns{margin-left:auto;display:flex;gap:4px}
+  .wbtn{width:21px;height:19px;border:1px solid rgba(255,255,255,.5);border-radius:3px;background:linear-gradient(180deg,#6fa8e8,#2f6fc4);color:#fff;font-size:11px;font-weight:700;display:grid;place-items:center;cursor:pointer}
+  .wbtn.close{background:linear-gradient(180deg,#e57a5a,#c23a1c)}
+  .menubar{height:22px;background:#f1efe2;border-bottom:1px solid #c7c3ad;display:flex;align-items:center;padding:0 4px;gap:2px;font-size:12px}
+  .menubar span{padding:2px 8px;border-radius:3px}.menubar span:hover{background:#d6e4f5}
+  .toolbar{height:30px;background:linear-gradient(180deg,#fbfaf5,#e9e6d6);border-bottom:1px solid #c7c3ad;display:flex;align-items:center;padding:0 6px;gap:6px;flex-wrap:wrap}
+  .tbtn{display:flex;align-items:center;gap:5px;background:#fff;border:1px solid #b9b59c;border-radius:4px;padding:3px 9px;font-size:11px;cursor:pointer}
+  .tbtn:hover{background:#e8f0fb;border-color:#5a86c4}
+  .statusbar{height:20px;background:#ece9d8;border-top:1px solid #fff;display:flex;align-items:center;padding:0 8px;font-size:11px;color:#444;gap:14px}
+  .cbody{flex:1;display:flex;min-height:0;background:#fff}
+  .tree{width:250px;background:#fff;border-right:1px solid #b9c4d6;overflow:auto;padding:6px 0;font-size:12px}
+  .tnode{padding:3px 6px;cursor:pointer;white-space:nowrap;display:flex;align-items:center;gap:5px}
+  .tnode:hover{background:#eaf1fb}.tnode.sel{background:#316ac5;color:#fff}
+  .tnode .tw{width:12px;color:#888;font-size:10px}.tnode.sel .tw{color:#fff}
+  .tchild{display:none}.tchild.open{display:block}
+  .content{flex:1;overflow:auto;background:#fff}
+  .cbar{min-height:26px;background:linear-gradient(180deg,#eef3fb,#dbe6f6);border-bottom:1px solid #b9c4d6;display:flex;align-items:center;padding:5px 10px;font-weight:700;color:#1c4f8f;font-size:12px;flex-wrap:wrap;gap:8px}
+  table{border-collapse:collapse;width:100%;font-size:11.5px}
+  th{background:linear-gradient(180deg,#f5f6f8,#e4e8ee);border:1px solid #c4cbd6;padding:4px 7px;text-align:left;font-weight:700;color:#33405a;white-space:nowrap}
+  td{border:1px solid #d8dde6;padding:4px 7px}
+  tr.grow:hover td{background:#eef4fd;cursor:pointer}
+  .dot{width:9px;height:9px;border-radius:50%;display:inline-block;margin-right:5px;vertical-align:middle}
+  .g{background:#2faa4a}.y{background:#e3b53b}.r{background:#cf3a2a}.b{background:#3a76c4}.gray{background:#b6b6b6}
+  .btn{background:linear-gradient(180deg,#fdfdfd,#e6e6e6);border:1px solid #8a96a8;border-radius:4px;padding:4px 12px;font-size:12px;cursor:pointer}
+  .btn:hover{background:#eef4fd;border-color:#5a86c4}.btn.def{border-color:#1c5bb5;font-weight:700}.btn.sm{padding:2px 8px;font-size:11px}
+  input,select{border:1px solid #8a96a8;border-radius:2px;padding:3px 5px;font-size:12px;font-family:inherit}
+  fieldset{border:1px solid #c4cbd6;border-radius:4px;margin:0 0 12px}
+  legend{font-weight:700;color:#1c4f8f;padding:0 6px}
+  .formgrid{display:grid;grid-template-columns:170px 1fr;gap:8px 12px;align-items:center;max-width:580px}
+  .formgrid label{color:#333;text-align:right}
+  .row6{display:flex;gap:14px;flex-wrap:wrap;padding:10px 12px}
+  .kpi{border:1px solid #c4cbd6;border-radius:6px;padding:10px 14px;min-width:150px;background:#fafcff}
+  .kpi .v{font-size:22px;font-weight:800}.kpi .l{font-size:11px;color:#5a6b80}
+  .tabs{display:flex;gap:0;background:#dfe7f1;border-bottom:1px solid #b9c4d6;flex-wrap:wrap}
+  .tabs .tab{padding:6px 13px;cursor:pointer;font-size:11.5px;border-right:1px solid #c4cdd9}
+  .tabs .tab:hover{background:#eaf1fb}.tabs .tab.on{background:#fff;font-weight:700;color:#1c4f8f}
+  .filter{display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end;padding:10px 12px;background:#f6f9fd;border-bottom:1px solid #dde6f2}
+  .filter .f{display:flex;flex-direction:column;gap:3px;font-size:11px;color:#555}
+  .out{font-family:Consolas,monospace;font-size:11.5px;color:#1f7a3a;background:#0c1a10;color:#7fe7a0;border:1px solid #2a3a2c;border-radius:4px;padding:10px;white-space:pre-wrap;margin:10px 12px}
+  .legend{display:flex;gap:14px;flex-wrap:wrap;font-size:11px;color:#555;padding:8px 12px}.legend span{display:flex;align-items:center;gap:5px}
+  .pill{display:inline-block;font-size:10.5px;font-weight:700;padding:1px 8px;border-radius:10px}
+  .pill.ok{background:#dff3e4;color:#1f7a3a;border:1px solid #9fd8b0}.pill.no{background:#fbe2de;color:#b5301c;border:1px solid #f0b3a8}.pill.w{background:#fdf3d6;color:#9a7b1a;border:1px solid #ecd98a}.pill.bl{background:#dde9fb;color:#1c4f8f;border:1px solid #aecaf0}
+  .dlg-bg{position:absolute;inset:0;background:rgba(0,0,0,.25);display:none;place-items:center;z-index:60}
+  .dlg-bg.show{display:grid}
+  .dlg{background:#ece9d8;border:1px solid #0a246a;border-radius:8px 8px 0 0;box-shadow:0 16px 50px rgba(0,0,0,.4);width:480px;overflow:hidden}
+  .dlg .body{padding:16px}.dlg .foot{padding:0 16px 14px;display:flex;gap:8px;justify-content:flex-end}
+  .note{background:#fffbe6;border:1px solid #e8d986;border-radius:4px;padding:8px 10px;font-size:11.5px;color:#665;margin:10px 12px}
+  .kvt th{width:210px}
+
+  .sysov{padding:14px 16px;font-size:11.5px}
+  .ovtop{display:flex;gap:16px;justify-content:center;margin-bottom:20px;flex-wrap:wrap}
+  .ovbox{border:1px solid #9aa6b6;border-radius:5px;background:linear-gradient(180deg,#fff,#eef2f7);padding:6px 14px;display:flex;align-items:center;gap:8px;font-weight:600;color:#33405a}
+  .ovflow{display:grid;grid-template-columns:1fr 60px 130px 60px 1fr;gap:6px;align-items:center}
+  .ovcol{display:flex;flex-direction:column;gap:16px}
+  .ovtm{border:1px solid #8a98ab;border-radius:6px;background:linear-gradient(180deg,#eef3fb,#d3e0ef);min-height:230px;display:flex;flex-direction:column;align-items:center;justify-content:center;font-weight:700;color:#33405a;gap:8px;text-align:center}
+  .ovnode{border:1px solid #9aa6b6;border-radius:5px;background:linear-gradient(180deg,#fff,#eef2f7);padding:0;overflow:hidden}
+  .ovnode .nh{background:linear-gradient(180deg,#f3f6fa,#e2e8f0);padding:4px 9px;font-weight:700;color:#33405a;display:flex;align-items:center;gap:7px;border-bottom:1px solid #dbe2ec}
+  .ovnode .nr{padding:4px 9px;display:flex;align-items:center;gap:7px;border-bottom:1px solid #eef1f6}
+  .ovnode .nr:last-child{border-bottom:none}
+  .ovconn{font-size:10px;color:#5a6b80;margin-left:auto}
+  .ovarrow{font-size:10px;color:#5a6b80;text-align:center;line-height:1.5}
+  .ovstatus{margin-top:16px;border-top:1px solid #cdd6e2;padding-top:6px;font-size:11px;color:#666;display:flex;gap:20px}
+</style></head>
+<body>
+<div id="desktop">
+  <div class="deskbar"><b>Postilion Realtime</b> — Sandbox &nbsp;·&nbsp; ACI Postilion® Realtime Management Console (training) <span class="sp">Double-click the icon to open</span></div>
+  <div class="icons"><div class="dicon" onclick="openConsole()"><div class="img">◉</div><div class="lbl">Realtime Management Console</div></div></div>
+
+  <div class="win" id="consoleWin" style="left:90px;top:60px;width:980px;height:610px">
+    <div class="titlebar"><span class="ti">◉ Realtime Management Console — BlueBank</span>
+      <span class="wbtns"><span class="wbtn">_</span><span class="wbtn">▢</span><span class="wbtn close" onclick="hide('consoleWin')">✕</span></span></div>
+    <div class="menubar"><span>File</span><span>Action</span><span>View</span><span>Favorites</span><span>Window</span><span>Help</span></div>
+    <div class="toolbar">
+      <div class="tbtn" onclick="selectNode('monitor')">◉ Realtime Monitor</div>
+      <div class="tbtn" onclick="selectNode('source')">▸ Source Nodes</div>
+      <div class="tbtn" onclick="selectNode('sink')">◂ Sink Nodes</div>
+      <div class="tbtn" onclick="selectNode('route')">⤳ Routes</div>
+      <div class="tbtn" onclick="selectNode('txnq')">🔎 Transaction Query</div>
+      <div class="tbtn" onclick="cmd('RESYNC')">↻ Resync</div>
+    </div>
+    <div class="cbody"><div class="tree" id="tree"></div><div class="content" id="cContent"></div></div>
+    <div class="statusbar"><span id="cStatus">Ready</span><span style="margin-left:auto" id="cServer">Server: BLUEBANK-RT · Connected (Trusted) · Business date 0727</span></div>
+  </div>
+  <div class="dlg-bg" id="dlgBg"><div class="dlg" id="dlg"></div></div>
+  <div class="taskbar"><div class="startbtn">start</div><div class="taskitem" onclick="show('consoleWin')">◉ Realtime Management Console</div><div class="clock" id="clock"></div></div>
+</div>
+<script>
+/* ===== data ===== */
+let SRC=[{id:"AtmApp-01",iface:"AtmApp",type:"ATM",sap:"SAP-ATM",adv:60,req:30,ret:30,status:"UP",txns:124}, {id:"eSocketPOS",iface:"eSocket.POS",type:"POS",sap:"SAP-POS",adv:45,req:30,ret:30,status:"UP",txns:88}];
+let SINK=[{id:"PostBridge",iface:"PostBridge",inter:"IC-VISA",batch:"external",gran:"node",status:"UP",sf:0,txns:64},{id:"MCDebit",iface:"MasterCard Debit",inter:"IC-MC",batch:"external",gran:"node",status:"UP",sf:0,txns:22},{id:"StandIn",iface:"Internal Stand-in",inter:"IC-STANDIN",batch:"internal",gran:"terminal",status:"UP",sf:0,txns:126}];
+let ROUTE=[{id:"RT-1",type:"card-based",match:"506100",acct:"any",txn:"any",sink:"StandIn",prio:10,desc:"Verve Gold → on-us stand-in"},{id:"RT-4",type:"card-based",match:"4",acct:"any",txn:"any",sink:"PostBridge",prio:50,desc:"Visa BINs → VisaNet"},{id:"RT-5",type:"card-based",match:"5[1-5]",acct:"any",txn:"any",sink:"MCDebit",prio:50,desc:"Mastercard → MCNet"}];
+let ACPT=[{id:"CA0001",name:"BlueBank HQ Lobby",type:"ATM",city:"Lagos"},{id:"CA0002",name:"BlueBank Ikeja Branch",type:"ATM",city:"Lagos"},{id:"CA0003",name:"ShopRite Lekki POS",type:"POS",city:"Lagos"}];
+let CAL=[{id:"DEFAULT",desc:"Default business calendar",incr:"02:00 daily",cutover:"Automatic"},{id:"NETWORK",desc:"Network-synced (external)",incr:"From field 15",cutover:"External"}];
+let INTER=[{id:"IC-VISA",name:"VisaNet Interchange",scheme:"VISA",sap:"SAP-VISA",role:"issuer",inst:"400001",on:true},{id:"IC-MC",name:"Mastercard Interchange",scheme:"MC",sap:"SAP-MC",role:"issuer",inst:"500002",on:true},{id:"IC-STANDIN",name:"Blue Bank Stand-in",scheme:"VERVE",sap:"SAP-STANDIN",role:"issuer",inst:"000001",on:true}];
+let PART=[{id:"BlueBank",name:"Blue Bank",role:"Acquirer/Issuer",team:"Lagos Ops"},{id:"VisaNet",name:"Visa",role:"Network",team:"-"},{id:"MCNet",name:"Mastercard",role:"Network",team:"-"}];
+let TAPP=[{id:"AtmApp",desc:"State-driven ATM driving",proto:"NDC+/Diebold 911"},{id:"eSocket.POS",desc:"POS terminal driving",proto:"APACS/ISO"}];
+let JOBS=[{id:"J1",name:"Postilion - Cleaner - Transaction tables",sched:"Daily 03:00",status:"Enabled",last:"SUCCESS"},{id:"J2",name:"Postilion - Merge - Hotcards",sched:"Every 15 min",status:"Enabled",last:"SUCCESS"},{id:"J3",name:"Postilion - Monitor - Store & Forward Queues",sched:"Every 5 min",status:"Enabled",last:"SUCCESS"},{id:"J4",name:"Postilion - Merge - Currencies",sched:"Daily 02:30",status:"Disabled",last:"-"}];
+let EVENTS=[{id:"EV1001",app:"Transaction Manager",sev:"suspect",state:"unattended",desc:"PIN verification failure on ATM00001",ts:"11:20:03"},{id:"EV1002",app:"Interchange IC-VISA",sev:"informational",state:"pending",desc:"Sign-on completed",ts:"08:00:11"},{id:"EV1003",app:"PostBridge",sev:"critical",state:"unattended",desc:"Response time threshold exceeded",ts:"11:41:55"}];
+const TXNS=[
+ {no:"5582001",stan:"100021",mti:"0200",type:"Withdrawal",pan:"506100******0018",amt:"10,000.00",cur:"NGN",term:"ATM00001",src:"AtmApp-01",sink:"StandIn",rc:"00",resp:"Approved",auth:"PostCard stand-in (issuer)",ms:42,date:"2014-07-27 10:30:15"},
+ {no:"5582002",stan:"100022",mti:"0200",type:"Balance Inquiry",pan:"506100******0018",amt:"0.00",cur:"NGN",term:"ATM00001",src:"AtmApp-01",sink:"StandIn",rc:"00",resp:"Approved",auth:"PostCard stand-in (issuer)",ms:31,date:"2014-07-27 10:32:48"},
+ {no:"5582003",stan:"100024",mti:"0200",type:"Withdrawal",pan:"400012******1234",amt:"50.00",cur:"USD",term:"ATM00002",src:"AtmApp-01",sink:"PostBridge",rc:"00",resp:"Approved",auth:"Limits-based stand-in (acquirer)",ms:120,date:"2014-07-27 11:14:55"},
+ {no:"5582004",stan:"100025",mti:"0200",type:"Withdrawal",pan:"506100******0026",amt:"40,000.00",cur:"NGN",term:"ATM00001",src:"AtmApp-01",sink:"StandIn",rc:"51",resp:"Insufficient funds",auth:"PostCard stand-in (issuer)",ms:38,date:"2014-07-27 11:20:03"},
+ {no:"5582005",stan:"100031",mti:"0420",type:"Reversal",pan:"506100******0026",amt:"40,000.00",cur:"NGN",term:"ATM00001",src:"AtmApp-01",sink:"StandIn",rc:"00",resp:"Approved",auth:"Auto-reversal",ms:25,date:"2014-07-27 11:21:00"},
+];
+let AUDIT=[{ts:"2014-07-27 09:12",user:"Engineer",action:"Update",entity:"Source Node AtmApp-01",detail:"advTimeout 75→60"},{ts:"2014-07-26 16:40",user:"upostcfg",action:"Insert",entity:"Route RT-5",detail:"Mastercard route added"},{ts:"2014-07-26 10:05",user:"upostcfg",action:"Delete",entity:"Card Acceptor CA0009",detail:"decommissioned"}];
+let ACTIVE=[{inst:"Instance A (primary)",node:"BLUEBANK-RT-A",state:"Active",role:"Processing transactions"},{inst:"Instance B",node:"BLUEBANK-RT-B",state:"Active",role:"Hot standby (mirrors A)"}];
+let VOLS=[["19 Aug 12:00:00","412","0"],["19 Aug 11:00:00","412","38"],["19 Aug 10:00:00","374","41"],["19 Aug 09:00:00","333","52"],["18 Aug 17:00:00","281","27"],["18 Aug 16:00:00","254","33"],["18 Aug 15:00:00","221","19"]];
+let UPTIME=[["Transaction Manager","17 Aug 11:21","19 Aug 08:27","100.0000"],["Transaction Manager","13 Aug 12:08","17 Aug 11:21","99.9689"],["PostBridge","12 Aug 07:49","13 Aug 12:08","100.0000"],["Certificate Manager","11 Aug 11:11","12 Aug 07:49","99.6004"],["Scheduler","10 Aug 10:27","11 Aug 11:11","100.0000"]];
+
+/* ===== helpers ===== */
+function show(id){document.getElementById(id).classList.add('show');}
+function hide(id){document.getElementById(id).classList.remove('show');}
+function openConsole(){show('consoleWin');consoleLogin();}
+function dlg(h){document.getElementById('dlg').innerHTML=h;document.getElementById('dlgBg').classList.add('show');}
+function closeDlg(){document.getElementById('dlgBg').classList.remove('show');}
+function tick(){document.getElementById('clock').textContent=new Date().toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'});}
+setInterval(tick,1000);tick();
+function gv(id){const e=document.getElementById(id);return e?e.value.trim():'';}
+function toastRT(m){const d=document.createElement('div');d.textContent=m;d.style.cssText='position:fixed;bottom:40px;left:50%;transform:translateX(-50%);background:#1c5b38;color:#fff;padding:8px 18px;border-radius:6px;z-index:99;font-size:12px;box-shadow:0 6px 18px rgba(0,0,0,.3)';document.getElementById('desktop').appendChild(d);setTimeout(()=>d.remove(),1700);}
+function sevPill(s){return '<span class="pill '+(s==='critical'?'no':s==='suspect'?'w':'bl')+'">'+s+'</span>';}
+
+/* ===== login ===== */
+function consoleLogin(){
+  dlg(`<div class="titlebar"><span class="ti">Log On to Realtime</span></div><div class="body">
+   <div style="display:flex;gap:12px"><div style="font-size:34px">🔐</div><div style="flex:1">
+   <div style="margin-bottom:8px;color:#333">Connect to the Realtime database.</div>
+   <div style="margin-bottom:6px"><label><input type="radio" name="a" checked onclick="document.getElementById('sqlf').style.display='none'"> Use Trusted Connection (Windows) — <i>PCI DSS recommended</i></label></div>
+   <div><label><input type="radio" name="a" onclick="document.getElementById('sqlf').style.display='grid'"> Standard security (SQL Server)</label></div>
+   <div id="sqlf" class="formgrid" style="display:none;margin-top:10px;grid-template-columns:90px 1fr"><label>User:</label><input value="upostcfg"><label>Password:</label><input type="password" value="postilion"><label>Server:</label><input value="BLUEBANK-RT"></div>
+   </div></div></div>
+   <div class="foot"><button class="btn def" onclick="closeDlg();buildTree();selectNode('overview')">OK</button><button class="btn" onclick="closeDlg();hide('consoleWin')">Cancel</button></div>`);
+}
+
+/* ===== tree ===== */
+const TREE=[{id:'root',label:'Realtime Management Console',icon:'◉',children:[
+  {id:'cfg',label:'Configuration',icon:'📁',children:[
+    {id:'cards',label:'Cards Configuration',icon:'▤'},
+    {id:'apps',label:'Applications',icon:'🧩',children:[{id:'interchange',label:'Interchanges',icon:'🔗'},{id:'participant',label:'Participants',icon:'🏛'},{id:'termapp',label:'Terminal Applications',icon:'🖥'}]},
+    {id:'tm',label:'Transaction Manager',icon:'⇄',children:[{id:'source',label:'Source Nodes',icon:'▸'},{id:'sink',label:'Sink Nodes',icon:'◂'},{id:'route',label:'Routes',icon:'⤳'},{id:'acceptor',label:'Card Acceptors',icon:'▭'},{id:'calendar',label:'Business Calendars',icon:'📅'}]},
+    {id:'jobs',label:'Scheduled Jobs',icon:'⏰'},
+  ]},
+  {id:'mon',label:'Monitoring',icon:'📁',children:[{id:'monitor',label:'Realtime Monitor',icon:'◉'},{id:'terminals',label:'Terminals Monitor',icon:'🏧'},{id:'process',label:'Process Monitor',icon:'⚙'}]},
+  {id:'qry',label:'Queries',icon:'📁',children:[{id:'txnq',label:'Transaction Query',icon:'🔎'},{id:'cardq',label:'Cards Query',icon:'💳'},{id:'auditq',label:'Audit Query',icon:'📜'}]},
+  {id:'reports',label:'Reports',icon:'📊'},{id:'docs',label:'Documentation',icon:'📖'},{id:'tools',label:'Tools',icon:'🛠'},
+]}];
+let SEL='overview';
+function buildTree(){const open=window._o||{root:1,cfg:1,tm:1,mon:1,qry:1,apps:1};window._o=open;
+  function r(nodes,d){return nodes.map(n=>{const k=n.children&&n.children.length;const tw=k?(open[n.id]?'▾':'▸'):'';
+    let h=`<div class="tnode ${SEL===n.id?'sel':''}" style="padding-left:${6+d*13}px" onclick="tc('${n.id}',${k?1:0})"><span class="tw">${tw}</span><span>${n.icon}</span><span>${n.label}</span></div>`;
+    if(k)h+=`<div class="tchild ${open[n.id]?'open':''}" id="ch_${n.id}">${r(n.children,d+1)}</div>`;return h;}).join('');}
+  document.getElementById('tree').innerHTML=r(TREE,0);}
+function tc(id,k){if(k){const c=document.getElementById('ch_'+id);if(c){c.classList.toggle('open');window._o[id]=c.classList.contains('open');}}selectNode(id);}
+function selectNode(id){SEL=id;buildTree();renderC(id);}
+
+/* ===== config registry (generic CRUD) ===== */
+const CFG={
+  source:{title:"Transaction Manager — Source Nodes",data:()=>SRC,pk:"id",
+    cols:[["id","Node"],["iface","Interface"],["type","Type"],["sap","SAP"],["adv","Adv TO"],["req","Req TO"],["status","Status"],["txns","Txns"]],
+    fields:[["id","Node name"],["iface","Interface"],["type","Type",["ATM","POS"]],["sap","SAP",["SAP-ATM","SAP-POS"]],["ret","Retention (days)"],["req","Request timeout (s)"],["adv","Advice timeout (s)"],["status","Status",["UP","DOWN"]]]},
+  sink:{title:"Transaction Manager — Sink Nodes",data:()=>SINK,pk:"id",
+    cols:[["id","Node"],["iface","Interface"],["inter","Interchange"],["batch","Batch mgmt"],["gran","Granularity"],["sf","S&F"],["status","Status"]],
+    fields:[["id","Node name"],["iface","Interface"],["inter","Interchange",()=>INTER.map(i=>i.id)],["batch","Batch management",["internal","external"]],["gran","Granularity",["terminal","card-acceptor","acquirer","node"]],["status","Status",["UP","DOWN"]]]},
+  route:{title:"Transaction Manager — Routes",data:()=>ROUTE,pk:"id",
+    cols:[["id","ID"],["type","Type"],["match","BIN / match"],["txn","Txn"],["sink","→ Sink"],["prio","Prio"],["desc","Description"]],
+    fields:[["id","Route ID"],["type","Type",["card-based","source-based","transaction-based"]],["match","BIN / match value"],["acct","Account type"],["txn","Txn type"],["sink","Sink node",()=>SINK.map(s=>s.id)],["prio","Priority"],["desc","Description"]]},
+  acceptor:{title:"Transaction Manager — Card Acceptors",data:()=>ACPT,pk:"id",
+    cols:[["id","ID"],["name","Name"],["type","Type"],["city","City"]],
+    fields:[["id","Acceptor ID"],["name","Name"],["type","Type",["ATM","POS"]],["city","City"]]},
+  calendar:{title:"Transaction Manager — Business Calendars",data:()=>CAL,pk:"id",
+    cols:[["id","Calendar"],["desc","Description"],["incr","Increment"],["cutover","Cutover"]],
+    fields:[["id","Calendar ID"],["desc","Description"],["incr","Increment time"],["cutover","Cutover",["Automatic","No automatic cutover","External"]]]},
+  interchange:{title:"Applications — Interchanges",data:()=>INTER,pk:"id",
+    cols:[["id","ID"],["name","Name"],["scheme","Scheme"],["sap","SAP"],["role","Role"],["inst","Inst ID"],["on","Signed on"]],
+    fields:[["id","Interchange ID"],["name","Name"],["scheme","Scheme",["VISA","MC","VERVE","AMEX"]],["sap","SAP",["SAP-VISA","SAP-MC","SAP-STANDIN"]],["role","Role",["issuer","acquirer"]],["inst","Institution ID"]]},
+  participant:{title:"Applications — Participants",data:()=>PART,pk:"id",cols:[["id","ID"],["name","Name"],["role","Role"],["team","Support team"]],fields:[["id","ID"],["name","Name"],["role","Role"],["team","Support team"]]},
+  termapp:{title:"Applications — Terminal Applications",data:()=>TAPP,pk:"id",cols:[["id","Application"],["desc","Description"],["proto","Protocols"]],fields:[["id","Application"],["desc","Description"],["proto","Protocols"]]},
+};
+function cellVal(k,row){ if(k==='on') return row.on?'<span class="pill ok">yes</span>':'<span class="pill no">no</span>'; if(k==='status') return '<span class="pill '+(row[k]==='UP'?'ok':'no')+'">'+row[k]+'</span>'; return row[k]==null?'':row[k]; }
+function cfgList(kind){
+  const c=CFG[kind]; const rows=c.data();
+  const body=`<div class="cbar">${c.title} <span style="margin-left:auto"></span><button class="btn def sm" onclick="cfgForm('${kind}',null)">+ New</button></div>
+   <div style="padding:10px 12px"><table><thead><tr>${c.cols.map(x=>`<th>${x[1]}</th>`).join('')}<th></th></tr></thead><tbody>
+   ${rows.map((r,i)=>`<tr><${c.cols.map(x=>`td>${cellVal(x[0],r)}</td><`).join('').slice(0,-2)}td style="white-space:nowrap"><button class="btn sm" onclick="cfgForm('${kind}',${i})">Modify</button> <button class="btn sm" onclick="cfgDel('${kind}',${i})">Delete</button></td></tr>`).join('')}
+   </tbody></table></div>`;
+  document.getElementById('cContent').innerHTML=body;
+  document.getElementById('cStatus').textContent=c.title;
+}
+function optList(o){ return typeof o==='function'?o():o; }
+function cfgForm(kind,idx){
+  const c=CFG[kind]; const isNew=idx===null; const row=isNew?{}:c.data()[idx];
+  const inner=c.fields.map(f=>{const[k,label,opts]=f; const val=row[k]!=null?row[k]:'';
+    if(opts) return `<label>${label}</label><select id="ff_${k}">`+optList(opts).map(o=>`<option ${String(o)===String(val)?'selected':''}>${o}</option>`).join('')+`</select>`;
+    return `<label>${label}</label><input id="ff_${k}" value="${val}" ${(!isNew&&k===c.pk)?'readonly':''}>`;
+  }).join('');
+  dlg(`<div class="titlebar"><span class="ti">${isNew?'New':'Modify'} — ${c.title.split('— ').pop()}</span></div>
+   <div class="body"><fieldset><legend>${isNew?'Create record':'Edit record'}</legend><div class="formgrid">${inner}</div></fieldset></div>
+   <div class="foot"><button class="btn def" onclick="cfgSave('${kind}',${idx===null?'null':idx})">Save</button><button class="btn" onclick="closeDlg()">Cancel</button></div>`);
+}
+function cfgSave(kind,idx){
+  const c=CFG[kind]; const obj={};
+  c.fields.forEach(f=>{const k=f[0];let v=gv('ff_'+k); if(['adv','req','ret','prio','sf','txns'].includes(k)) v=Number(v)||0; obj[k]=v;});
+  if(kind==='interchange') obj.on=(idx===null)?true:c.data()[idx].on;
+  if(kind==='source'&&idx===null){obj.txns=0;} if(kind==='sink'&&idx===null){obj.txns=0;obj.sf=0;}
+  if(idx===null){ c.data().push(obj); toastRT('Created '+(obj[c.pk]||'record')); }
+  else { Object.assign(c.data()[idx],obj); toastRT('Saved '+(obj[c.pk]||'record')); }
+  closeDlg(); cfgList(kind);
+}
+function cfgDel(kind,idx){ if(!confirm('Delete this record?'))return; CFG[kind].data().splice(idx,1); cfgList(kind); toastRT('Deleted'); }
+
+/* ===== render dispatcher ===== */
+function renderC(id){
+  const c=document.getElementById('cContent'); const st=document.getElementById('cStatus');
+  if(CFG[id]) return cfgList(id);
+  if(id==='monitor') return renderMonitor();
+  if(id==='cards') return renderCardsCfg();
+  if(id==='jobs') return renderJobs();
+  if(id==='txnq') return renderTxnQuery();
+  if(id==='cardq') return renderCardQuery();
+  if(id==='auditq') return renderAudit();
+  if(id==='terminals'){st.textContent='Terminals Monitor';c.innerHTML='<div class="cbar">Terminals Monitor</div><div style="padding:12px">'+tbl(["Terminal","Acceptor","Mode","Last txn","Events"],[["ATM00001","CA0001","<span class=\"pill ok\">IN-SERVICE</span>","10:30","0"],["ATM00002","CA0002","<span class=\"pill ok\">IN-SERVICE</span>","11:14","1"]])+'</div>';return;}
+  if(id==='process'){st.textContent='Process Monitor';c.innerHTML='<div class="cbar">Process Monitor</div><div style="padding:12px">'+tbl(["Process","Result","Date"],[["Reporter - Transaction Volumes","<span class=\"pill ok\">SUCCESS</span>","11:00"],["Monitor - Store & Forward Queues","<span class=\"pill ok\">SUCCESS</span>","11:40"]])+'</div>';return;}
+  if(id==='reports'){st.textContent='Reports';c.innerHTML='<div class="cbar">Reports — On-demand</div><div style="padding:12px"><div class="formgrid"><label>Template:</label><select><option>S101 Transaction Volumes</option><option>S204 Settlement</option></select><label>Business date:</label><input value="0727"></div><div style="margin:12px 0"><button class="btn def" onclick="toastRT(\'Report generated\')">Generate Report</button></div>'+tbl(["Type","Count"],[["Withdrawal","3"],["Balance Inquiry","1"],["Reversal","1"]])+'</div>';return;}
+  if(id==='docs'){st.textContent='Documentation';c.innerHTML='<div class="cbar">Documentation</div><div style="padding:14px;color:#444"><ul><li>Realtime User Guide</li><li>PCI DSS Compliance Guide</li><li>Interface Specifications (PostBridge, AmexLink, MasterCard, Visa Base I/II, ACI BASE24)</li></ul></div>';return;}
+  if(id==='tools'){st.textContent='Tools';c.innerHTML='<div class="cbar">Tools</div><div style="padding:14px;color:#444"><p>Certificate Manager · Trace Viewer · HSM Interface · Key Management.</p></div>';return;}
+  st.textContent='Ready';
+  c.innerHTML=`<div class="cbar">Realtime Management Console</div><div style="padding:16px;max-width:640px;color:#333">
+   <p style="margin-top:0">The <b>Realtime Management Console</b> provides unified access to configuration, monitoring and query consoles for the Transaction Manager (the switch).</p>
+   <ul style="line-height:1.9">
+     <li><b>Configuration</b> — Cards, Applications (Interchanges, Participants, Terminal Apps), Transaction Manager (Source/Sink Nodes, Routes, Card Acceptors, Business Calendars), Scheduled Jobs.</li>
+     <li><b>Monitoring</b> — Realtime Monitor (traffic-light health, events, interchanges, nodes, commands), Terminals, Processes.</li>
+     <li><b>Queries</b> — Transaction, Cards and Audit query consoles.</li>
+   </ul>
+   <div class="note">Every list has working <b>+ New</b>, <b>Modify</b> and <b>Delete</b> buttons; the Monitor commands and queries are all interactive.</div></div>`;
+}
+function tbl(cols,rows){return `<table><thead><tr>${cols.map(c=>`<th>${c}</th>`).join('')}</tr></thead><tbody>${rows.map(r=>`<tr><td>${r.join('</td><td>')}</td></tr>`).join('')}</tbody></table>`;}
+
+/* ===== Cards Configuration ===== */
+function renderCardsCfg(){
+  document.getElementById('cStatus').textContent='Cards Configuration Console';
+  document.getElementById('cContent').innerHTML=`<div class="cbar">Cards Configuration Console — Card Products <span style="margin-left:auto"></span><button class="btn def sm" onclick="toastRT('Use the PostCard sandbox for full card config')">+ New Product</button></div>
+   <div style="padding:12px">${tbl(["Product","BINs","Issuer","On-us","PIN verify","Limit profile"],[["Verve Gold","506100, 539841","BlueBank","Yes","PostCard (PVV)","STANDARD-GOLD"],["Verve Classic","506101","BlueBank","Yes","PostCard (PVV)","STANDARD-CLASSIC"],["Visa (ext)","4","VisaNet","No","Issuer","FOREIGN"]])}
+   <div class="note">Cards Configuration matches a transaction's BIN to a card product, then applies its accounts, processing options, allowed transactions, routing and limits. Full card/account/customer management is in the <b>PostCard</b> sandbox.</div></div>`;
+}
+
+/* ===== Scheduled Jobs ===== */
+function renderJobs(){
+  document.getElementById('cStatus').textContent='Scheduled Jobs';
+  const rows=JOBS.map((j,i)=>`<tr><td>${j.name}</td><td>${j.sched}</td><td><span class="pill ${j.status==='Enabled'?'ok':'no'}">${j.status}</span></td><td>${j.last}</td>
+   <td style="white-space:nowrap"><button class="btn sm" onclick="jobToggle(${i})">${j.status==='Enabled'?'Disable':'Enable'}</button> <button class="btn sm" onclick="jobStart(${i})">Start</button></td></tr>`).join('');
+  document.getElementById('cContent').innerHTML=`<div class="cbar">Scheduled Jobs Configuration</div><div style="padding:12px"><table><thead><tr><th>Job</th><th>Schedule</th><th>Status</th><th>Last result</th><th></th></tr></thead><tbody>${rows}</tbody></table></div>`;
+}
+function jobToggle(i){JOBS[i].status=JOBS[i].status==='Enabled'?'Disabled':'Enabled';renderJobs();toastRT('Job '+JOBS[i].status.toLowerCase());}
+function jobStart(i){JOBS[i].last='SUCCESS';toastRT('Job started: '+JOBS[i].name);renderJobs();}
+
+/* ===== Realtime Monitor ===== */
+let MONTAB='overview';
+function renderMonitor(){
+  document.getElementById('cStatus').textContent='Realtime Monitor';
+  const tabs=[['overview','System Overview'],['summary','System Summary'],['events','Events'],['services','Services'],['interchanges','Interchanges'],['active','Active/active'],['nodes','Nodes'],['commands','Commands'],['jobs','Scheduled Jobs'],['volumes','Transaction Volumes History'],['uptime','Uptime History']];
+  const now=new Date().toLocaleString();
+  const refresh=`<div class="ovstatus"><span>Data is refreshed every 1 minute(s).</span><span>Last refresh: ${now}</span><span>Duration: 0.2 sec</span></div>`;
+  let body='';
+  if(MONTAB==='overview') body=sysOverview()+refresh;
+  else if(MONTAB==='summary'){ const op=EVENTS.filter(e=>e.state!=='closed'); body=`<div class="note">System Summary — summarized notifications of areas of concern. ${op.length} open event(s).</div>`+tbl(["Area","Concern","Severity"],op.map(e=>[e.app,e.desc,sevPill(e.sev)]))+refresh; }
+  else if(MONTAB==='events'){
+    body=`<div class="filter"><div class="f">Application<select id="fApp"><option>All</option>${[...new Set(EVENTS.map(e=>e.app))].map(a=>`<option>${a}</option>`).join('')}</select></div>
+     <div class="f">Severity<select id="fSev"><option>All</option><option>critical</option><option>suspect</option><option>informational</option></select></div>
+     <div class="f">State<select id="fState"><option>All</option><option>unattended</option><option>pending</option><option>closed</option></select></div>
+     <button class="btn def" onclick="renderMonitor()">Search</button> <button class="btn" onclick="document.getElementById('fApp').value='All';document.getElementById('fSev').value='All';document.getElementById('fState').value='All';renderMonitor()">Reset</button></div><div id="evgrid"></div>`;
+  }
+  else if(MONTAB==='services') body=tbl(["Service","Status"],[["Postilion Transaction Manager","<span class=\"pill ok\">Running</span>"],["Postilion Certificate Manager","<span class=\"pill ok\">Running</span>"],["Postilion PostBridge","<span class=\"pill ok\">Running</span>"],["Postilion Scheduler","<span class=\"pill ok\">Running</span>"]])+refresh;
+  else if(MONTAB==='interchanges') body=tbl(["Interchange","Scheme","SAP","Role","Inst ID","Signed on"],INTER.map(i=>[i.id,i.scheme,i.sap,i.role,i.inst,i.on?'<span class="pill ok">yes</span>':'<span class="pill no">no</span>']))+refresh;
+  else if(MONTAB==='active') body=`<div class="note">Active/active — two Realtime instances run concurrently for resilience; either can process while the other stands by.</div>`+tbl(["Instance","Server","State","Role"],ACTIVE.map(a=>[a.inst,a.node,'<span class="pill ok">'+a.state+'</span>',a.role]))+refresh;
+  else if(MONTAB==='nodes') body=tbl(["Node","Role","Connected to TM","S&F","Txns"],SRC.map(n=>[n.id,'<span class="pill bl">source</span>','<span class="pill ok">yes</span>','0',n.txns]).concat(SINK.map(n=>[n.id,'<span class="pill bl">sink</span>','<span class="pill ok">yes</span>',n.sf,n.txns])))+refresh;
+  else if(MONTAB==='commands'){
+    body=`<div style="padding:10px 12px"><div style="font-size:11px;color:#555;margin-bottom:8px">Transaction Manager operator commands:</div>
+     <div style="display:flex;gap:8px;flex-wrap:wrap">${["RESYNC","TRACE_ON","TRACE_OFF","VERSION_?","CUTOVER_StandIn","ABORT_5582004","RESUBMIT_5582004","LICENSE_?"].map(x=>`<button class="btn" onclick="cmd('${x}')">${x}</button>`).join('')}</div></div><div class="out" id="cmdout">Ready. Issue a command above.</div>`;
+  }
+  else if(MONTAB==='jobs') body=tbl(["Job","Schedule","Status","Last"],JOBS.map(j=>[j.name,j.sched,j.status,j.last]))+refresh;
+  else if(MONTAB==='volumes') body=`<div class="note">Transaction Volumes History — cumulative total per period and transactions processed (hourly).</div>`+tbl(["Date","Transaction Count (cumulative)","Transactions Processed (hourly)"],VOLS)+refresh;
+  else if(MONTAB==='uptime') body=`<div class="filter"><div class="f">Application<select><option>All</option><option>Transaction Manager</option></select></div><button class="btn def" onclick="renderMonitor()">Run</button></div>`+tbl(["Application","From","To","Uptime %"],UPTIME)+refresh;
+  document.getElementById('cContent').innerHTML=`<div class="cbar">Realtime Monitor — SQL Server · .\realtime\</div><div class="tabs">${tabs.map(t=>`<div class="tab ${MONTAB===t[0]?'on':''}" onclick="MONTAB='${t[0]}';renderMonitor()">${t[1]}</div>`).join('')}</div>${body}`;
+  if(MONTAB==='events') drawEvents();
+}
+function sysOverview(){
+  const crit=EVENTS.filter(e=>e.sev==='critical'&&e.state!=='closed').length;
+  const susp=EVENTS.filter(e=>e.sev==='suspect'&&e.state!=='closed').length;
+  const tmDot=crit?'r':(susp?'y':'g');
+  const srcCol=SRC.map(n=>`<div class="ovnode"><div class="nh"><span class="dot ${n.status==='UP'?'g':'r'}"></span>${n.id}</div><div class="nr" style="font-size:10px;color:#5a6b80">${n.iface}<span class="ovconn">${n.txns} txns</span></div></div>`).join('');
+  const srcArrows=SRC.map(n=>`<div class="ovarrow">${n.iface.toLowerCase().replace(/[^a-z]/g,'').slice(0,6)}.src&nbsp;&rarr;</div>`).join('<div style="height:40px"></div>');
+  const sinkCol=SINK.map(n=>`<div class="ovnode"><div class="nh"><span class="dot ${n.status==='UP'?'g':'r'}"></span>${n.iface}</div><div class="nr"><span class="dot ${n.status==='UP'?'g':'r'}"></span>${n.id}Snk<span class="ovconn">${Math.max(0,n.txns%3)} connected</span></div><div class="nr"><span class="dot ${n.status==='UP'?'g':'r'}"></span>${n.id}Src<span class="ovconn">${Math.max(0,(n.txns+1)%2)} connected</span></div></div>`).join('');
+  const sinkArrows=SINK.map(n=>`<div class="ovarrow">&rarr;&nbsp;${n.id.toLowerCase().slice(0,4)}.snk (${n.sf})<br>&larr;&nbsp;${n.id.toLowerCase().slice(0,4)}.src</div>`).join('<div style="height:34px"></div>');
+  return `<div class="sysov">
+   <div class="ovtop"><div class="ovbox"><span class="dot g"></span>Certificate Manager</div><div class="ovbox"><span class="dot g"></span>Scheduler</div><div class="ovbox"><span class="dot g"></span>PostCard</div></div>
+   <div class="ovflow">
+     <div class="ovcol">${srcCol}</div>
+     <div class="ovcol" style="gap:0;justify-content:space-around">${srcArrows}</div>
+     <div class="ovtm"><span class="dot ${tmDot}" style="width:14px;height:14px"></span>Transaction<br>Manager</div>
+     <div class="ovcol" style="gap:0;justify-content:space-around">${sinkArrows}</div>
+     <div class="ovcol">${sinkCol}</div>
+   </div></div>`;
+}
+function drawEvents(){
+  const fa=gv('fApp')||'All',fs=gv('fSev')||'All',ft=gv('fState')||'All';
+  const list=EVENTS.filter(e=>(fa==='All'||e.app===fa)&&(fs==='All'||e.sev===fs)&&(ft==='All'||e.state===ft));
+  const rows=list.length?list.map(e=>`<tr><td>${e.id}</td><td>${e.app}</td><td>${sevPill(e.sev)}</td><td>${e.state}</td><td>${e.desc}</td><td>${e.ts}</td><td>${e.state!=='closed'?`<button class="btn sm" onclick="closeEvent('${e.id}')">Close</button>`:''}</td></tr>`).join(''):'<tr><td colspan="7" style="color:#777">No events match the filter.</td></tr>';
+  document.getElementById('evgrid').innerHTML=`<div style="padding:0 12px 12px">${tblHead(["ID","Application","Severity","State","Description","Time",""])}<tbody>${rows}</tbody></table></div>`;
+}
+function tblHead(cols){return `<table><thead><tr>${cols.map(c=>`<th>${c}</th>`).join('')}</tr></thead>`;}
+function closeEvent(id){const e=EVENTS.find(x=>x.id===id);if(e)e.state='closed';renderMonitor();toastRT('Event '+id+' closed');}
+function cmd(c){
+  let out='';
+  if(c==='RESYNC') out='RESYNC OK — Transaction Manager and interfaces resynchronized.';
+  else if(c==='TRACE_ON') out='TRACE_ON — tracing enabled (writes to trace files).';
+  else if(c==='TRACE_OFF') out='TRACE_OFF — tracing disabled.';
+  else if(c==='VERSION_?') out='Realtime 5.3.02 · PostBridge 8.2 · TM build 5.3.02.114';
+  else if(c.startsWith('CUTOVER')){ out=c+' — batch cut over; new batch opened (recon advice 0520 sent).'; EVENTS.unshift({id:'EV'+(1000+EVENTS.length),app:'Transaction Manager',sev:'informational',state:'unattended',desc:c+' performed',ts:new Date().toTimeString().slice(0,8)});}
+  else if(c.startsWith('ABORT')) out=c+' — transaction aborted.';
+  else if(c.startsWith('RESUBMIT')) out=c+' — transaction resubmitted to sink node.';
+  else if(c==='LICENSE_?') out='Licence: Realtime, PostCard, Office, ATM Driving, eSocket.POS — enabled.';
+  else out='Unknown command';
+  if(SEL==='monitor'&&MONTAB==='commands'){const o=document.getElementById('cmdout');if(o)o.textContent='> '+c+'\n'+out;}
+  toastRT('Command: '+c);
+}
+
+/* ===== Transaction Query ===== */
+let TQRES=false, TQSEL=null, TQTAB='summary';
+function renderTxnQuery(){
+  document.getElementById('cStatus').textContent='Transaction Query Console';
+  const q=(window._tq||'').toLowerCase();
+  const list=TQRES?TXNS.filter(t=>!q||t.pan.toLowerCase().includes(q)||t.no.includes(q)||t.term.toLowerCase().includes(q)):[];
+  document.getElementById('cContent').innerHTML=`<div class="cbar">Transaction Query Console</div>
+   <div class="filter"><div class="f">Search method<select id="tqm"><option>Cardholder (PAN)</option><option>Operational</option><option>Batch</option></select></div>
+   <div class="f">PAN / Terminal / Txn no<input id="tqq" value="${window._tq||''}" placeholder="(blank = recent)"></div>
+   <div class="f">Max records<select><option>50</option><option>1000</option></select></div>
+   <button class="btn def" onclick="tqSearch()">Search</button> <button class="btn" onclick="tqReset()">Reset</button></div>
+   ${TQRES?`<div class="cbar" style="background:#eef">Results (${list.length}) — click a row for Transaction Information</div>
+   <div style="padding:0 12px">${tblHead(["Txn No","STAN","Type","PAN","Amount","RC","Sink"])}<tbody>${list.length?list.map(t=>`<tr class="grow" onclick="TQSEL='${t.no}';TQTAB='summary';renderTxnDetail()"><td>${t.no}</td><td>${t.stan}</td><td>${t.type}</td><td>${t.pan}</td><td>${t.amt} ${t.cur}</td><td>${t.rc==='00'?'<span class="pill ok">00</span>':'<span class="pill no">'+t.rc+'</span>'}</td><td>${t.sink}</td></tr>`).join(''):'<tr><td colspan="7" style="color:#777">No transactions match.</td></tr>'}</tbody></table></div>
+   <div id="tqdetail"></div>`:'<div class="note">Enter criteria and click <b>Search</b>. Leave the box blank to list recent transactions.</div>'}`;
+  if(TQSEL) renderTxnDetail();
+}
+function tqSearch(){window._tq=gv('tqq');TQRES=true;renderTxnQuery();}
+function tqReset(){window._tq='';TQRES=false;TQSEL=null;renderTxnQuery();}
+function renderTxnDetail(){
+  const t=TXNS.find(x=>x.no===TQSEL); if(!t)return;
+  const tabs=[['summary','Summary'],['flow','Message flow'],['amounts','Amounts'],['auth','Authorizations'],['pos','POS']];
+  let p='';
+  if(TQTAB==='summary') p=kv([["Transaction number",t.no],["STAN (F11)",t.stan],["MTI",t.mti],["Type",t.type],["PAN (F2)",t.pan],["Source → Sink",t.src+' → '+t.sink],["Response (F39)",t.rc+' — '+t.resp],["Local date/time",t.date],["Latency",t.ms+' ms']]);
+  else if(TQTAB==='flow') p=tbl(["Leg","Direction","MTI","Node","Result"],[["1","Downstream (acquirer)",t.mti,t.term,t.resp],["1","Upstream (issuer)",t.mti.slice(0,2)+(parseInt(t.mti.slice(2))+10),t.sink,t.resp]]);
+  else if(TQTAB==='amounts') p=kv([["Transaction amount (F4)",t.amt+' '+t.cur],["Fee",'0.00'],["Settlement amount",t.amt+' '+t.cur],["Settlement date (F15)","0727"]]);
+  else if(TQTAB==='auth') p=kv([["Response code (F39)",t.rc+' — '+t.resp],["Authorization ID (F38)",t.rc==='00'?'A1B2C3':'—'],["Authorized by",t.auth]]);
+  else p=kv([["Card acceptor terminal (F41)",t.term],["POS entry mode (F22)","021 (magstripe, PIN)"],["Currency (F49)",t.cur]]);
+  document.getElementById('tqdetail').innerHTML=`<div class="cbar" style="background:#eef">Transaction Information — ${t.no}</div><div class="tabs">${tabs.map(x=>`<div class="tab ${TQTAB===x[0]?'on':''}" onclick="TQTAB='${x[0]}';renderTxnDetail()">${x[1]}</div>`).join('')}</div><div style="padding:0 12px 12px">${p}</div>`;
+}
+function kv(rows){return `<table class="kvt"><tbody>${rows.map(r=>`<tr><th>${r[0]}</th><td>${r[1]}</td></tr>`).join('')}</tbody></table>`;}
+
+/* ===== Cards Query ===== */
+function renderCardQuery(){
+  document.getElementById('cStatus').textContent='Cards Query Console';
+  document.getElementById('cContent').innerHTML=`<div class="cbar">Cards Query Console</div>
+   <div class="filter"><div class="f">PAN<input id="cqp" value="5061004000000018"></div><button class="btn def" onclick="cqRun()">Query</button></div>
+   <div id="cqres"></div>`;
+  cqRun();
+}
+function cqRun(){
+  const pan=gv('cqp'); let bin=pan.slice(0,6); let prod='(no match)',route='(no route)',pin='-',acct='-';
+  if(pan.startsWith('506100')||pan.startsWith('539841')){prod='Verve Gold';route='StandIn (on-us)';pin='PostCard (PVV)';acct='Savings / Current';}
+  else if(pan.startsWith('506101')){prod='Verve Classic';route='StandIn (on-us)';pin='PostCard (PVV)';acct='Savings / Current';}
+  else if(pan.startsWith('4')){prod='Visa (ext)';route='PostBridge → VisaNet';pin='Issuer';acct='Default';}
+  else if(/^5[1-5]/.test(pan)){prod='Mastercard (ext)';route='MCDebit → MCNet';pin='Issuer';acct='Default';}
+  document.getElementById('cqres').innerHTML=`<div class="cbar" style="background:#eef">Card processing for ${pan} (BIN ${bin})</div><div style="padding:0 12px 12px">${kv([["Card product",prod],["Routing",route],["Account processing (PIN)",pin],["Attached accounts",acct],["Allowed transactions","WDL, BAL, TRF, PURCHASE, MINI"],["Expiry checking","Yes"],["Applicable limit profile",prod.includes('Gold')?'STANDARD-GOLD':prod.includes('Classic')?'STANDARD-CLASSIC':'FOREIGN']])}</div>`;
+}
+
+/* ===== Audit Query ===== */
+function renderAudit(){
+  document.getElementById('cStatus').textContent='Audit Query Console';
+  document.getElementById('cContent').innerHTML=`<div class="cbar">Audit Query Console</div>
+   <div class="filter"><div class="f">Action<select id="aqa"><option>All</option><option>Insert</option><option>Update</option><option>Delete</option></select></div><button class="btn def" onclick="renderAuditGrid()">Search</button></div>
+   <div id="aqgrid"></div>`;
+  renderAuditGrid();
+}
+function renderAuditGrid(){
+  const a=gv('aqa')||'All'; const list=AUDIT.filter(x=>a==='All'||x.action===a);
+  document.getElementById('aqgrid').innerHTML=`<div style="padding:0 12px 12px">${tblHead(["Date/Time","User","Action","Entity","Detail"])}<tbody>${list.map(x=>`<tr><td>${x.ts}</td><td>${x.user}</td><td><span class="pill ${x.action==='Delete'?'no':x.action==='Insert'?'ok':'w'}">${x.action}</span></td><td>${x.entity}</td><td>${x.detail}</td></tr>`).join('')}</tbody></table></div>`;
+}
+</script>
+</body></html>

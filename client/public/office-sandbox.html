@@ -1,0 +1,484 @@
+<!doctype html>
+<html lang="en"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Postilion Office — Sandbox</title>
+<style>
+  *{box-sizing:border-box}
+  html,body{margin:0;height:100%;font-family:Tahoma,"Segoe UI",Arial,sans-serif;font-size:12px;color:#000}
+  /* light desktop */
+  #desktop{height:100vh;width:100vw;background:linear-gradient(180deg,#eaf0f7,#cdd9e8);overflow:hidden;position:relative}
+  .deskbar{position:absolute;top:0;left:0;right:0;height:34px;background:linear-gradient(180deg,#f7f9fc,#dde6f1);border-bottom:1px solid #aab8cc;display:flex;align-items:center;gap:10px;padding:0 12px;font-size:12px;color:#274}
+  .deskbar b{color:#b5301c}
+  .deskbar .sp{margin-left:auto;color:#5a6b80}
+  .icons{position:absolute;top:60px;left:30px;display:flex;flex-direction:column;gap:26px}
+  .dicon{width:108px;text-align:center;cursor:pointer;color:#16324f;text-shadow:0 1px 0 #fff}
+  .dicon .img{width:64px;height:64px;margin:0 auto 6px;border-radius:12px;display:grid;place-items:center;font-size:30px;color:#fff;box-shadow:0 4px 10px rgba(0,0,0,.18)}
+  .dicon:hover .img{filter:brightness(1.06)}
+  .dicon.console .img{background:linear-gradient(135deg,#4a76c4,#274d86)}
+  .dicon.portal .img{background:linear-gradient(135deg,#e0492f,#b5301c)}
+  .dicon .lbl{font-size:12px;font-weight:600;background:rgba(255,255,255,.35);border-radius:4px;padding:2px 4px;display:inline-block}
+  .taskbar{position:absolute;bottom:0;left:0;right:0;height:30px;background:linear-gradient(180deg,#3a76c4,#274d86);display:flex;align-items:center;padding:0 8px;gap:6px}
+  .startbtn{background:linear-gradient(180deg,#5fa544,#3c7a2a);color:#fff;font-weight:700;border-radius:5px;padding:3px 14px;font-style:italic;box-shadow:inset 0 1px 0 rgba(255,255,255,.4)}
+  .taskitem{background:rgba(255,255,255,.16);color:#fff;border-radius:4px;padding:4px 10px;font-size:11px;cursor:pointer;max-width:200px;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
+  .clock{margin-left:auto;color:#fff;font-size:11px;background:rgba(0,0,0,.12);padding:4px 10px;border-radius:4px}
+  /* generic window */
+  .win{position:absolute;background:#ece9d8;border:1px solid #0a246a;border-radius:8px 8px 0 0;box-shadow:0 14px 40px rgba(0,0,0,.35);display:none;flex-direction:column;overflow:hidden}
+  .win.show{display:flex}
+  .titlebar{height:30px;background:linear-gradient(180deg,#3f8be0,#1c5bb5 45%,#16469a);color:#fff;display:flex;align-items:center;padding:0 8px;gap:8px;font-weight:700;cursor:default;text-shadow:0 1px 1px rgba(0,0,0,.4)}
+  .titlebar .ti{font-size:12px}
+  .titlebar .wbtns{margin-left:auto;display:flex;gap:4px}
+  .wbtn{width:21px;height:19px;border:1px solid rgba(255,255,255,.5);border-radius:3px;background:linear-gradient(180deg,#6fa8e8,#2f6fc4);color:#fff;font-size:11px;font-weight:700;display:grid;place-items:center;cursor:pointer}
+  .wbtn.close{background:linear-gradient(180deg,#e57a5a,#c23a1c)}
+  .menubar{height:22px;background:#f1efe2;border-bottom:1px solid #c7c3ad;display:flex;align-items:center;padding:0 4px;gap:2px;font-size:12px}
+  .menubar span{padding:2px 8px;border-radius:3px;cursor:default}
+  .menubar span:hover{background:#d6e4f5}
+  .toolbar{height:30px;background:linear-gradient(180deg,#fbfaf5,#e9e6d6);border-bottom:1px solid #c7c3ad;display:flex;align-items:center;padding:0 6px;gap:6px}
+  .tbtn{display:flex;align-items:center;gap:5px;background:#fff;border:1px solid #b9b59c;border-radius:4px;padding:3px 9px;font-size:11px;cursor:pointer}
+  .tbtn:hover{background:#e8f0fb;border-color:#5a86c4}
+  .statusbar{height:20px;background:#ece9d8;border-top:1px solid #fff;display:flex;align-items:center;padding:0 8px;font-size:11px;color:#444;gap:14px;box-shadow:inset 0 1px 0 #c7c3ad}
+  /* console body */
+  .cbody{flex:1;display:flex;min-height:0;background:#fff}
+  .tree{width:236px;background:#fff;border-right:1px solid #b9c4d6;overflow:auto;padding:6px 0;font-size:12px}
+  .tnode{padding:3px 6px;cursor:pointer;white-space:nowrap;display:flex;align-items:center;gap:5px}
+  .tnode:hover{background:#eaf1fb}
+  .tnode.sel{background:#316ac5;color:#fff}
+  .tnode .tw{width:12px;color:#888;font-size:10px}
+  .tnode.sel .tw{color:#fff}
+  .tchild{display:none}
+  .tchild.open{display:block}
+  .content{flex:1;overflow:auto;padding:0;background:#fff}
+  .cbar{height:26px;background:linear-gradient(180deg,#eef3fb,#dbe6f6);border-bottom:1px solid #b9c4d6;display:flex;align-items:center;padding:0 10px;font-weight:700;color:#1c4f8f;font-size:12px}
+  table{border-collapse:collapse;width:100%;font-size:11.5px}
+  th{background:linear-gradient(180deg,#f5f6f8,#e4e8ee);border:1px solid #c4cbd6;padding:4px 7px;text-align:left;font-weight:700;color:#33405a;white-space:nowrap}
+  td{border:1px solid #d8dde6;padding:4px 7px}
+  tr.grow:hover td{background:#eef4fd;cursor:default}
+  .dot{width:9px;height:9px;border-radius:50%;display:inline-block;margin-right:5px;vertical-align:middle}
+  .g{background:#2faa4a}.y{background:#e3b53b}.r{background:#cf3a2a}.gray{background:#b6b6b6}
+  .btn{background:linear-gradient(180deg,#fdfdfd,#e6e6e6);border:1px solid #8a96a8;border-radius:4px;padding:4px 14px;font-size:12px;cursor:pointer}
+  .btn:hover{background:#eef4fd;border-color:#5a86c4}
+  .btn.def{border-color:#1c5bb5;font-weight:700}
+  input,select{border:1px solid #8a96a8;border-radius:2px;padding:3px 5px;font-size:12px;font-family:inherit}
+  fieldset{border:1px solid #c4cbd6;border-radius:4px;margin:0 0 12px}
+  legend{font-weight:700;color:#1c4f8f;padding:0 6px}
+  .formgrid{display:grid;grid-template-columns:150px 1fr;gap:8px 12px;align-items:center;max-width:560px}
+  .formgrid label{color:#333;text-align:right}
+  /* modal dialog */
+  .dlg-bg{position:absolute;inset:0;background:rgba(0,0,0,.25);display:none;place-items:center;z-index:60}
+  .dlg-bg.show{display:grid}
+  .dlg{background:#ece9d8;border:1px solid #0a246a;border-radius:8px 8px 0 0;box-shadow:0 16px 50px rgba(0,0,0,.4);width:430px;overflow:hidden}
+  .dlg .body{padding:16px}
+  .dlg .foot{padding:0 16px 14px;display:flex;gap:8px;justify-content:flex-end}
+  /* S1 PORTAL (web look) */
+  .browser{background:#fff}
+  .bchrome{background:linear-gradient(180deg,#f3f5f8,#dde3ec);border-bottom:1px solid #b9c4d6;padding:6px 8px;display:flex;gap:6px;align-items:center}
+  .bchrome .addr{flex:1;background:#fff;border:1px solid #9fb0c6;border-radius:11px;padding:3px 12px;font-size:11px;color:#234;font-family:Arial}
+  .bchrome .bnav{width:24px;height:22px;border:1px solid #aeb9c8;border-radius:4px;background:#fff;display:grid;place-items:center;color:#5a6b80;cursor:pointer}
+  .portal{font-family:Arial,Helvetica,sans-serif;background:#fff}
+  .p-top{background:linear-gradient(180deg,#fbfcfe,#eef2f7);border-bottom:1px solid #cfd8e4;display:flex;align-items:center;padding:8px 14px;gap:12px}
+  .s1logo{display:flex;align-items:center;gap:8px}
+  .s1mark{width:40px;height:40px;border-radius:7px;background:linear-gradient(135deg,#e0492f,#b5301c);color:#fff;font-weight:800;font-size:22px;font-style:italic;display:grid;place-items:center;box-shadow:0 2px 5px rgba(0,0,0,.2)}
+  .s1logo .txt{line-height:1.15}.s1logo .txt b{color:#b5301c;font-size:15px}.s1logo .txt span{color:#5a6b80;font-size:11px}
+  .p-user{margin-left:auto;font-size:11px;color:#5a6b80}
+  .p-user a{color:#1c5bb5;cursor:pointer;text-decoration:underline}
+  .p-band{background:linear-gradient(180deg,#3a76c4,#22518f);color:#fff;font-size:12px;display:flex;gap:0}
+  .p-band .tab{padding:7px 16px;cursor:pointer;border-right:1px solid rgba(255,255,255,.18)}
+  .p-band .tab:hover{background:rgba(255,255,255,.12)}
+  .p-band .tab.on{background:#fff;color:#1c4f8f;font-weight:700}
+  .p-main{display:flex;min-height:0;flex:1}
+  .p-menu{width:200px;background:#eef2f8;border-right:1px solid #cfd8e4;padding:8px 0;font-size:12px}
+  .p-menu .grp{font-weight:700;color:#1c4f8f;padding:7px 14px 3px;font-size:11px;text-transform:uppercase;letter-spacing:.4px}
+  .p-menu a{display:block;padding:5px 22px;color:#234;cursor:pointer;text-decoration:none}
+  .p-menu a:hover{background:#dce7f5}.p-menu a.on{background:#cfe0f5;font-weight:700;border-left:3px solid #b5301c}
+  .p-content{flex:1;padding:14px 18px;overflow:auto;background:#fff}
+  .p-h{background:linear-gradient(180deg,#5a8ad0,#2f64ad);color:#fff;font-weight:700;padding:6px 12px;border-radius:4px 4px 0 0;font-size:12px}
+  .p-card{border:1px solid #cfd8e4;border-top:none;border-radius:0 0 4px 4px;padding:14px;margin-bottom:16px}
+  .p-formgrid{display:grid;grid-template-columns:140px 1fr 140px 1fr;gap:9px 12px;align-items:center;max-width:760px}
+  .p-formgrid label{text-align:right;color:#333;font-size:12px}
+  .p-btn{background:linear-gradient(180deg,#5a8ad0,#2f64ad);color:#fff;border:1px solid #22518f;border-radius:4px;padding:6px 18px;font-size:12px;cursor:pointer;font-weight:700}
+  .p-btn:hover{filter:brightness(1.07)}
+  .p-btn.sec{background:linear-gradient(180deg,#fbfbfb,#e7e7e7);color:#234;border-color:#9aa6b6;font-weight:400}
+  .ptable th{background:linear-gradient(180deg,#dfe8f4,#c9d8ec);border:1px solid #b6c4da;color:#1c4f8f}
+  .ptable td{border:1px solid #dde3ec;font-size:11.5px}
+  .ptable tr:nth-child(even) td{background:#f5f8fc}
+  .ptable tr.grow:hover td{background:#eaf3ff;cursor:pointer}
+  .pill{display:inline-block;font-size:10.5px;font-weight:700;padding:1px 8px;border-radius:10px}
+  .pill.ok{background:#dff3e4;color:#1f7a3a;border:1px solid #9fd8b0}
+  .pill.no{background:#fbe2de;color:#b5301c;border:1px solid #f0b3a8}
+  .login-wrap{display:grid;place-items:center;flex:1;background:linear-gradient(135deg,#eef3fa,#d6e1f0)}
+  .login-card{background:#fff;border:1px solid #cfd8e4;border-radius:8px;box-shadow:0 10px 30px rgba(0,0,0,.15);width:360px;overflow:hidden}
+  .login-card .lh{background:linear-gradient(135deg,#e0492f,#b5301c);color:#fff;padding:16px;display:flex;align-items:center;gap:10px}
+  .login-card .lb{padding:18px}
+  .crumb{color:#5a6b80;font-size:11px;margin-bottom:10px}
+  .tabrow{display:flex;gap:2px;border-bottom:1px solid #cfd8e4;margin-bottom:12px;flex-wrap:wrap}
+  .tabrow .t{padding:6px 12px;cursor:pointer;font-size:11.5px;border:1px solid transparent;border-bottom:none}
+  .tabrow .t.on{background:#fff;border-color:#cfd8e4;border-radius:4px 4px 0 0;font-weight:700;color:#1c4f8f;margin-bottom:-1px}
+  .note{background:#fffbe6;border:1px solid #e8d986;border-radius:4px;padding:8px 10px;font-size:11.5px;color:#665;margin:10px 0}
+
+  .chain{display:flex;align-items:center;gap:10px;justify-content:center;background:#f5f8fc;border:1px solid #cfd8e4;border-radius:4px;padding:12px;margin-bottom:12px;flex-wrap:wrap}
+  .chain .leg{border:1px solid #9fb6d4;border-radius:5px;background:#fff;padding:8px 14px;text-align:center;font-size:11.5px;min-width:140px}
+  .chain .leg .lt{font-weight:700;color:#1c4f8f}.chain .leg .ld{color:#5a6b80;font-size:10.5px;margin-top:2px}
+  .chain .ar{color:#5a6b80;font-size:20px}
+  .detailbtns{display:flex;gap:6px;margin-bottom:10px;flex-wrap:wrap}
+</style></head>
+<body>
+<div id="desktop">
+  <div class="deskbar"><b>Postilion Office</b> — Sandbox &nbsp;·&nbsp; ACI Postilion® replica (training) <span class="sp">Double-click an icon to open</span></div>
+  <div class="icons">
+    <div class="dicon console" onclick="openConsole()"><div class="img">▣</div><div class="lbl">Office Management Console</div></div>
+    <div class="dicon portal" onclick="openPortal()"><div class="img">S</div><div class="lbl">S1 Payment Portal</div></div>
+  </div>
+
+  <!-- ============ OFFICE MANAGEMENT CONSOLE ============ -->
+  <div class="win" id="consoleWin" style="left:120px;top:64px;width:880px;height:560px">
+    <div class="titlebar"><span class="ti">▣ Office Management Console — BlueBank</span>
+      <span class="wbtns"><span class="wbtn">_</span><span class="wbtn">▢</span><span class="wbtn close" onclick="hide('consoleWin')">✕</span></span></div>
+    <div class="menubar"><span>File</span><span>Action</span><span>View</span><span>Favorites</span><span>Window</span><span>Help</span></div>
+    <div class="toolbar">
+      <div class="tbtn" onclick="runNormalization()">▶ Run Normalization</div>
+      <div class="tbtn" onclick="selectNode('sentinel')">🖥 Sentinel Monitor</div>
+      <div class="tbtn" onclick="selectNode('plog')">📋 Process Log</div>
+      <div class="tbtn" onclick="refreshSentinel()">↻ Refresh</div>
+    </div>
+    <div class="cbody">
+      <div class="tree" id="tree"></div>
+      <div class="content" id="cContent"></div>
+    </div>
+    <div class="statusbar"><span id="cStatus">Ready</span><span style="margin-left:auto" id="cServer">Server: BLUEBANK-OFFICE · Connected (Trusted)</span></div>
+  </div>
+
+  <!-- ============ S1 PAYMENT PORTAL (browser) ============ -->
+  <div class="win" id="portalWin" style="left:200px;top:80px;width:900px;height:580px">
+    <div class="titlebar" style="background:linear-gradient(180deg,#7a8694,#5a6675)"><span class="ti">🌐 S1 Payment Portal — Windows Internet Explorer</span>
+      <span class="wbtns"><span class="wbtn">_</span><span class="wbtn">▢</span><span class="wbtn close" onclick="hide('portalWin')">✕</span></span></div>
+    <div class="bchrome"><span class="bnav">◀</span><span class="bnav">▶</span><span class="addr" id="portalAddr">http://localhost/portal/</span><span class="bnav">↻</span></div>
+    <div id="portalApp" style="flex:1;display:flex;flex-direction:column;min-height:0"></div>
+  </div>
+
+  <!-- modal host -->
+  <div class="dlg-bg" id="dlgBg"><div class="dlg" id="dlg"></div></div>
+
+  <div class="taskbar">
+    <div class="startbtn">start</div>
+    <div class="taskitem" onclick="show('consoleWin')">▣ Office Management Console</div>
+    <div class="taskitem" onclick="show('portalWin')">🌐 S1 Payment Portal</div>
+    <div class="clock" id="clock"></div>
+  </div>
+</div>
+
+<script>
+/* ============ mock data ============ */
+const TXNS=[
+  {no:"OF100021",mti:"0200",type:"Withdrawal",pan:"506100******0018",amt:"10,000.00",cur:"NGN",term:"ATM00001",node:"StandIn",rc:"00",resp:"Approved",date:"2014-07-27 10:30:15"},
+  {no:"OF100022",mti:"0200",type:"Balance Inquiry",pan:"506100******0018",amt:"0.00",cur:"NGN",term:"ATM00001",node:"StandIn",rc:"00",resp:"Approved",date:"2014-07-27 10:32:48"},
+  {no:"OF100023",mti:"0200",type:"Withdrawal",pan:"506101******0019",amt:"5,000.00",cur:"NGN",term:"ATM00002",node:"StandIn",rc:"00",resp:"Approved",date:"2014-07-27 11:02:10"},
+  {no:"OF100024",mti:"0200",type:"Withdrawal",pan:"400012******1234",amt:"50.00",cur:"USD",term:"ATM00002",node:"PostBridge",rc:"00",resp:"Approved",date:"2014-07-27 11:14:55"},
+  {no:"OF100025",mti:"0200",type:"Withdrawal",pan:"506100******0026",amt:"40,000.00",cur:"NGN",term:"ATM00001",node:"StandIn",rc:"51",resp:"Insufficient funds",date:"2014-07-27 11:20:03"},
+  {no:"OF100026",mti:"0200",type:"Purchase",pan:"541234******1234",amt:"120.00",cur:"USD",term:"POS00031",node:"MCDebit",rc:"00",resp:"Approved",date:"2014-07-27 11:41:22"},
+  {no:"OF100027",mti:"0420",type:"Reversal",pan:"506100******0026",amt:"40,000.00",cur:"NGN",term:"ATM00001",node:"StandIn",rc:"00",resp:"Approved",date:"2014-07-27 11:21:00"},
+];
+let SENTINEL=[
+  {name:"Postilion Office - Batch Process - Normalization",server:"BLUEBANK-OFFICE",step:"Phase 3 of 3",act:"Idle",res:"SUCCESS",st:"g"},
+  {name:"Postilion Office - Extract - NetworkExtract",server:"BLUEBANK-OFFICE",step:"-",act:"Queued",res:"QUEUED",st:"gray"},
+  {name:"Postilion Office - Recon - NetworkRecon",server:"BLUEBANK-OFFICE",step:"Phase 2 of 2",act:"Idle",res:"SUCCESS",st:"g"},
+];
+let PLOG=[
+  {proc:"Normalization",result:"SUCCESS",date:"2014-07-27 11:42:01",detail:"7 transaction(s) copied from Realtime to Office database. Phase 1 (read) OK. Phase 2 (normalize) OK. Phase 3 (commit) OK."},
+  {proc:"Extract — NetworkExtract",result:"SUCCESS",date:"2014-07-27 11:40:10",detail:"Extract file network_0727.dat written to C:\\Postilion\\Office\\extract. 6 records, business date 0727."},
+  {proc:"Recon — NetworkRecon",result:"WARNING",date:"2014-07-27 11:38:33",detail:"Reconciliation complete. 5 Matched & Equal, 1 Matched not Equal, 1 Postilion Only, 1 External Only. Review exceptions."},
+];
+
+/* ============ window helpers ============ */
+function show(id){document.getElementById(id).classList.add('show');}
+function hide(id){document.getElementById(id).classList.remove('show');}
+function openConsole(){ show('consoleWin'); consoleLogin(); }
+function openPortal(){ show('portalWin'); portalLogin(); }
+function dlg(html){ document.getElementById('dlg').innerHTML=html; document.getElementById('dlgBg').classList.add('show'); }
+function closeDlg(){ document.getElementById('dlgBg').classList.remove('show'); }
+function tick(){ const d=new Date(); document.getElementById('clock').textContent=d.toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'}); }
+setInterval(tick,1000); tick();
+
+/* ============ CONSOLE LOGIN ============ */
+function consoleLogin(){
+  dlg(`<div class="titlebar"><span class="ti">Log On to Office</span></div>
+  <div class="body">
+    <div style="display:flex;gap:12px;align-items:flex-start">
+      <div style="font-size:34px">🔐</div>
+      <div style="flex:1">
+        <div style="margin-bottom:10px;color:#333">Connect to the Office database.</div>
+        <div style="margin-bottom:6px"><label><input type="radio" name="auth" checked onclick="document.getElementById('sqlf').style.display='none'"> Use Trusted Connection (Windows) — <i>recommended (PCI&nbsp;DSS)</i></label></div>
+        <div><label><input type="radio" name="auth" onclick="document.getElementById('sqlf').style.display='grid'"> Standard security (SQL Server)</label></div>
+        <div id="sqlf" class="formgrid" style="display:none;margin-top:10px;grid-template-columns:90px 1fr">
+          <label>User name:</label><input value="upostcfg">
+          <label>Password:</label><input type="password" value="postilion">
+          <label>Server:</label><input value="BLUEBANK-OFFICE">
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="foot"><button class="btn def" onclick="closeDlg();buildTree();selectNode('overview')">OK</button><button class="btn" onclick="closeDlg();hide('consoleWin')">Cancel</button></div>`);
+}
+
+/* ============ CONSOLE TREE ============ */
+const TREE=[
+  {id:'root',label:'Office Management Console',icon:'▣',children:[
+    {id:'cfg',label:'Configuration',icon:'📁',children:[
+      {id:'extract',label:'Extract Component',icon:'⤓'},
+      {id:'recon',label:'Recon Component',icon:'⇌'},
+      {id:'reports-cfg',label:'Reports Component',icon:'▣'},
+      {id:'settlement',label:'Settlement Component',icon:'$'},
+    ]},
+    {id:'mon',label:'Monitoring',icon:'📁',children:[
+      {id:'sentinel',label:'Sentinel Monitor',icon:'🖥'},
+      {id:'plog',label:'Office Process Log',icon:'📋'},
+    ]},
+    {id:'qry',label:'Queries',icon:'📁',children:[
+      {id:'qexcept',label:'Exception Transactions',icon:'⚠'},
+      {id:'qrecon',label:'Recon Component',icon:'🔎'},
+    ]},
+    {id:'reports',label:'Reports',icon:'📊'},
+    {id:'docs',label:'Documentation',icon:'📖'},
+    {id:'tools',label:'Tools',icon:'🛠'},
+  ]}
+];
+let SEL='overview';
+function buildTree(){
+  const open={root:1,cfg:1,mon:1,qry:1};
+  function render(nodes,depth){
+    return nodes.map(n=>{
+      const hasK=n.children&&n.children.length;
+      const tw=hasK?(open[n.id]?'▾':'▸'):'';
+      let h=`<div class="tnode ${SEL===n.id?'sel':''}" style="padding-left:${6+depth*14}px" onclick="treeClick('${n.id}',${hasK?1:0})"><span class="tw">${tw}</span><span>${n.icon}</span><span>${n.label}</span></div>`;
+      if(hasK) h+=`<div class="tchild ${open[n.id]?'open':''}" id="ch_${n.id}">${render(n.children,depth+1)}</div>`;
+      return h;
+    }).join('');
+  }
+  window._treeOpen=open;
+  document.getElementById('tree').innerHTML=render(TREE,0);
+}
+function treeClick(id,hasK){
+  if(hasK){ const c=document.getElementById('ch_'+id); if(c){ c.classList.toggle('open'); window._treeOpen[id]=c.classList.contains('open'); } }
+  selectNode(id);
+}
+function selectNode(id){ SEL=id; buildTree(); renderConsole(id); }
+
+function renderConsole(id){
+  const c=document.getElementById('cContent'); const st=document.getElementById('cStatus');
+  if(id==='sentinel'){ st.textContent='Sentinel Monitor — refresh every 2 seconds'; return renderSentinel(); }
+  if(id==='plog'){ st.textContent='Office Process Log'; return renderPlog(); }
+  if(id==='extract'){ st.textContent='Extract Component — Configuration'; c.innerHTML=entityConsole('Extract','NetworkExtract','Generic Extract'); return; }
+  if(id==='recon'){ st.textContent='Recon Component — Configuration'; c.innerHTML=entityConsole('Recon','NetworkRecon','Generic Recon'); return; }
+  if(id==='qrecon'){ st.textContent='Recon Query'; return renderReconQuery(); }
+  if(id==='qexcept'){ st.textContent='Exception Transaction Query'; c.innerHTML=`<div class="cbar">Exception Transaction Query Console</div><div style="padding:14px"><table><thead><tr><th>Office No</th><th>PAN</th><th>Reason</th><th>Date</th></tr></thead><tbody><tr class="grow"><td>OF100099</td><td>506100******9999</td><td>Transaction normalized, corresponding batch already cleaned</td><td>2014-07-27 09:12</td></tr></tbody></table><div class="note">Exceptions occur on normalization failure, duplicate, logically incorrect field, or batch already cleaned.</div></div>`; return; }
+  if(id==='reports'){ st.textContent='Reports'; return renderReports(); }
+  if(id==='docs'){ st.textContent='Documentation'; c.innerHTML=`<div class="cbar">Documentation</div><div style="padding:14px;color:#444"><p><b>ACI Postilion® Office</b> — Payments Basic Training (Module 4).</p><ul><li>Office Framework User Guide</li><li>Generic Extract Plug-in User Guide</li><li>Generic Recon Plug-in User Guide</li><li>Crystal Reports Templates (S-series)</li></ul></div>`; return; }
+  if(id==='tools'){ st.textContent='Tools'; c.innerHTML=`<div class="cbar">Tools</div><div style="padding:14px;color:#444"><p>Trace Viewer · Refresh Period · Audit Trail Console · Certificate Manager.</p></div>`; return; }
+  // overview / config groups
+  st.textContent='Ready';
+  c.innerHTML=`<div class="cbar">Office Management Console</div><div style="padding:18px;color:#333;max-width:640px">
+    <p style="margin-top:0">Welcome to the <b>Office Management Console</b>. Office provides post-transaction processing: normalization, extract, reconciliation, settlement and reporting.</p>
+    <p>Expand a node in the tree to begin:</p>
+    <ul style="line-height:1.9">
+      <li><b>Configuration</b> — Extract, Recon, Reports and Settlement components and their plug-ins/entities.</li>
+      <li><b>Monitoring</b> — Sentinel Monitor (running processes) and the Office Process Log.</li>
+      <li><b>Queries</b> — Exception Transactions and Recon results.</li>
+      <li><b>Reports</b> — on-demand reports across the platform databases.</li>
+    </ul>
+    <div class="note">Tip: click <b>▶ Run Normalization</b> on the toolbar, then open <b>Sentinel Monitor</b> and the <b>Office Process Log</b> to see it execute.</div>
+  </div>`;
+}
+function renderSentinel(){
+  const rows=SENTINEL.map(p=>`<tr class="grow"><td><span class="dot ${p.st}"></span>${p.name}</td><td>${p.server}</td><td>${p.step}</td><td>${p.act}</td><td>${p.res}</td></tr>`).join('');
+  document.getElementById('cContent').innerHTML=`<div class="cbar">Sentinel Monitor — Sentinel Process</div>
+  <div style="padding:10px 12px"><table><thead><tr><th>Process Name</th><th>Server</th><th>Step</th><th>Activity</th><th>Result</th></tr></thead><tbody>${rows}</tbody></table>
+  <div style="margin-top:12px;display:flex;gap:8px;align-items:center"><button class="btn" onclick="termDlg()">Terminate Process…</button>
+  <span style="font-size:11px;color:#444"><span class="dot g"></span>OK &nbsp;<span class="dot y"></span>Suspect &nbsp;<span class="dot gray"></span>Queued &nbsp;<span class="dot r"></span>Failed</span></div></div>`;
+}
+function termDlg(){ dlg(`<div class="titlebar"><span class="ti">Terminate Process</span></div><div class="body"><p>Terminate the selected process?</p><div style="margin:8px 0"><label><input type="radio" name="t" checked> Terminate and Roll back</label></div><div><label><input type="radio" name="t"> Terminate without Rollback</label></div></div><div class="foot"><button class="btn def" onclick="closeDlg()">OK</button><button class="btn" onclick="closeDlg()">Cancel</button></div>`); }
+function renderPlog(){
+  const rows=PLOG.map((p,i)=>`<tr class="grow" ondblclick="logDesc(${i})"><td>${p.proc}</td><td><span class="dot ${p.result==='SUCCESS'?'g':p.result==='WARNING'?'y':'r'}"></span>${p.result}</td><td>${p.date}</td></tr>`).join('');
+  document.getElementById('cContent').innerHTML=`<div class="cbar">Office Process Log</div>
+  <div style="padding:10px 12px"><div style="margin-bottom:8px;font-size:11px;color:#555">Double-click a row to view the Log Description.</div>
+  <table><thead><tr><th>Process Name</th><th>Result</th><th>Run Date</th></tr></thead><tbody>${rows}</tbody></table></div>`;
+}
+function logDesc(i){ const p=PLOG[i];
+  dlg(`<div class="titlebar"><span class="ti">Log Description</span></div>
+  <div class="body" style="width:440px">
+    <div class="formgrid" style="grid-template-columns:90px 1fr;gap:5px 10px;margin-bottom:10px">
+      <label>Process:</label><b>${p.proc}</b><label>Result:</label><b>${p.result}</b><label>Run Date:</label><b>${p.date}</b>
+    </div>
+    <div style="font-weight:700;margin-bottom:4px">Log Description</div>
+    <div style="border:1px solid #8a96a8;background:#fff;height:120px;overflow:auto;padding:8px;font-size:11.5px" id="logdesc">${p.detail}</div>
+  </div>
+  <div class="foot"><button class="btn" onclick="copyLogDetails(this)">Copy Details to Clipboard</button><button class="btn def" onclick="closeDlg()">Close</button></div>`);
+}
+function entityConsole(kind,entity,plugin){
+  return `<div class="cbar">${kind} Component — Configuration</div>
+  <div style="padding:12px"><table><thead><tr><th>Entity</th><th>Plug-in</th><th>Output / Source</th><th>PCI DSS</th></tr></thead>
+  <tbody><tr class="grow" ondblclick="entityDlg('${kind}','${entity}','${plugin}')"><td>${entity}</td><td>${plugin}</td><td>C:\\Postilion\\Office\\${kind.toLowerCase()}</td><td>PAN partially masked</td></tr></tbody></table>
+  <div style="margin-top:10px"><button class="btn" onclick="entityDlg('${kind}','${entity}','${plugin}')">Modify…</button></div></div>`;
+}
+function entityDlg(kind,entity,plugin){
+  dlg(`<div class="titlebar"><span class="ti">Modify ${kind} Entity</span></div>
+  <div class="body">
+    <fieldset><legend>${kind} entity</legend>
+    <div class="formgrid">
+      <label>Entity name:</label><input value="${entity}">
+      <label>Plug-in:</label><input value="${plugin}" readonly>
+      <label>Output path:</label><input value="C:\\Postilion\\Office\\${kind.toLowerCase()}">
+      <label>Business date:</label><input value="0727">
+      <label>Node name method:</label><select><option>From sink node</option><option>From source node</option></select>
+      <label>PAN security:</label><select><option>PAN partially masked (F02)</option><option>PAN completely masked</option><option>PAN in clear (F00)</option></select>
+    </div></fieldset>
+  </div>
+  <div class="foot"><button class="btn def" onclick="closeDlg()">Save</button><button class="btn" onclick="closeDlg()">Cancel</button></div>`);
+}
+function renderReconQuery(){
+  const cat=(t,cls,rows)=>`<div style="font-weight:700;color:#1c4f8f;margin:12px 0 5px"><span class="pill ${cls}">${t}</span> (${rows.length})</div>`+
+    (rows.length?`<table><thead><tr><th>Office No</th><th>PAN</th><th>Office Amt</th><th>External Amt</th><th>Note</th></tr></thead><tbody>${rows.map(r=>`<tr class="grow"><td>${r.no}</td><td>${r.pan}</td><td>${r.o}</td><td>${r.e}</td><td>${r.n||''}</td></tr>`).join('')}</tbody></table>`:'<div style="font-size:11px;color:#777">None.</div>');
+  document.getElementById('cContent').innerHTML=`<div class="cbar">Recon Query — last session (RC1001 · sink PostBridge)</div><div style="padding:12px">`+
+    cat('Matched &amp; Equal','ok',[{no:'OF100021',pan:'506100******0018',o:'10,000.00',e:'10,000.00'},{no:'OF100024',pan:'400012******1234',o:'50.00',e:'50.00'}])+
+    cat('Matched not Equal','no',[{no:'OF100026',pan:'541234******1234',o:'120.00',e:'121.00',n:'Differs by 1.00 (fee)'}])+
+    cat('Postilion Only','no',[{no:'OF100023',pan:'506101******0019',o:'5,000.00',e:'—',n:'Not in external file'}])+
+    cat('External Only','no',[{no:'EXT-99001',pan:'506100******9999',o:'—',e:'75.00',n:'No Office record'}])+
+    `</div>`;
+}
+function renderReports(){
+  document.getElementById('cContent').innerHTML=`<div class="cbar">Reports — On-demand</div><div style="padding:14px">
+  <div class="formgrid"><label>Report template:</label><select><option>S101 — Transaction Volumes</option><option>S204 — Settlement Summary</option><option>S310 — Exception Report</option></select>
+  <label>Business date:</label><input value="0727"><label>Output:</label><select><option>Portal</option><option>Email</option><option>File</option></select></div>
+  <div style="margin:12px 0"><button class="btn def" onclick="genReportC(this)">Generate Report</button></div>
+  <div class="cbar" style="margin-top:8px">S101 — Transaction Volumes (preview)</div>
+  <table style="margin-top:0"><thead><tr><th>Transaction type</th><th>Count</th><th>Amount</th></tr></thead><tbody>
+  <tr><td>Cash Withdrawal</td><td>4</td><td>NGN 55,000.00 / USD 50.00</td></tr><tr><td>Balance Inquiry</td><td>1</td><td>—</td></tr>
+  <tr><td>Purchase</td><td>1</td><td>USD 120.00</td></tr><tr><td>Reversal</td><td>1</td><td>NGN 40,000.00</td></tr>
+  <tr><td><b>Approved</b></td><td><b>5</b></td><td></td></tr><tr><td><b>Declined</b></td><td><b>1</b></td><td></td></tr></tbody></table></div>`;
+}
+function runNormalization(){
+  SENTINEL.unshift({name:"Postilion Office - Batch Process - Normalization",server:"BLUEBANK-OFFICE",step:"Phase 1 of 3",act:"Running",res:"RUNNING",st:"y"});
+  document.getElementById('cStatus').textContent='Normalization started…';
+  selectNode('sentinel');
+  setTimeout(()=>{ SENTINEL[0]={name:"Postilion Office - Batch Process - Normalization",server:"BLUEBANK-OFFICE",step:"Phase 3 of 3",act:"Idle",res:"SUCCESS",st:"g"};
+    PLOG.unshift({proc:"Normalization",result:"SUCCESS",date:new Date().toISOString().slice(0,19).replace('T',' '),detail:"Normalization run complete. Transactions copied from Realtime to Office database."});
+    if(SEL==='sentinel') renderSentinel(); document.getElementById('cStatus').textContent='Normalization SUCCESS'; },1500);
+}
+function refreshSentinel(){ if(SEL==='sentinel') renderSentinel(); }
+
+/* ============ S1 PORTAL ============ */
+let PMENU='find';
+function portalLogin(){
+  document.getElementById('portalAddr').textContent='http://localhost/portal/logon';
+  document.getElementById('portalApp').innerHTML=`<div class="login-wrap"><div class="login-card">
+    <div class="lh"><div class="s1mark">S</div><div><div style="font-size:16px;font-weight:800">S1 Payment Portal</div><div style="font-size:11px;opacity:.9">ACI Postilion® · BlueBank</div></div></div>
+    <div class="lb">
+      <div style="font-weight:700;color:#1c4f8f;margin-bottom:10px">Log On</div>
+      <div class="formgrid" style="grid-template-columns:90px 1fr">
+        <label>User:</label><input id="pu" value="office">
+        <label>Password:</label><input id="pp" type="password" value="password">
+        <label>Domain:</label><select id="pd"><option>BlueBank Employees</option><option>BlueBank Customers</option></select>
+      </div>
+      <div style="margin-top:16px;display:flex;gap:8px;justify-content:flex-end"><button class="p-btn" onclick="portalHome()">Log On</button><button class="p-btn sec" onclick="hide('portalWin')">Cancel</button></div>
+      <div class="note" style="margin-top:14px">Training credentials are pre-filled. The Portal provides transaction enquiry, batch query, and reports — preferred over the console to avoid impacting online processing.</div>
+    </div>
+  </div></div>`;
+}
+function portalHome(){ PMENU='find'; portalRender(); }
+function portalRender(){
+  document.getElementById('portalAddr').textContent='http://localhost/portal/'+(PMENU==='find'?'transactions':PMENU);
+  const menu=(id,lbl)=>`<a class="${PMENU===id?'on':''}" onclick="PMENU='${id}';portalRender()">${lbl}</a>`;
+  let body='';
+  if(PMENU==='find'||PMENU==='results') body=portalFind();
+  else if(PMENU==='batches') body=portalBatches();
+  else if(PMENU==='reports') body=portalReports();
+  else if(PMENU==='detail') body=portalDetail();
+  document.getElementById('portalApp').innerHTML=`
+  <div class="portal" style="display:flex;flex-direction:column;flex:1;min-height:0">
+    <div class="p-top"><div class="s1logo"><div class="s1mark">S</div><div class="txt"><b>S1 Payment Portal</b><br><span>ACI Postilion® · BlueBank</span></div></div>
+      <div class="p-user">Logged on: <b>office</b> (BlueBank Employees) &nbsp;|&nbsp; <a onclick="portalLogin()">Log Off</a></div></div>
+    <div class="p-band"><div class="tab ${['find','results','detail'].includes(PMENU)?'on':''}" onclick="PMENU='find';portalRender()">Transactions</div>
+      <div class="tab ${PMENU==='batches'?'on':''}" onclick="PMENU='batches';portalRender()">Batches</div>
+      <div class="tab ${PMENU==='reports'?'on':''}" onclick="PMENU='reports';portalRender()">Reports</div>
+      <div class="tab">Administration</div></div>
+    <div class="p-main">
+      <div class="p-menu">
+        <div class="grp">Transactions</div>${menu('find','Find Recent Transactions')}<a onclick="PMENU='find';portalRender()">Find by Card</a><a onclick="PMENU='find';portalRender()">Find by Terminal</a><a onclick="PMENU='find';portalRender()">Find by Online Transaction</a><a onclick="PMENU='find';portalRender()">Find by Realtime Tran Number</a>${menu('batches','View Transaction Batches')}
+        <div class="grp">Reporting</div>${menu('reports','Reports')}
+        <div class="grp">Help</div><a>Documentation</a>
+      </div>
+      <div class="p-content">${body}</div>
+    </div>
+  </div>`;
+}
+function portalFind(){
+  const showResults = PMENU==='results';
+  const rows=TXNS.map(t=>`<tr class="grow" onclick="PMENU='detail';window._selTxn='${t.no}';portalRender()"><td><a style="color:#1c5bb5;text-decoration:underline">${t.date}</a></td><td>${t.type}</td><td>${t.pan}</td><td style="text-align:right">${t.amt} ${t.cur}</td><td>${t.term}</td><td>${t.node}</td><td>${t.rc==='00'?'<span class="pill ok">'+t.resp+'</span>':'<span class="pill no">'+t.resp+'</span>'}</td></tr>`).join('');
+  return `<div class="p-h">Transactions — Find Recent Transactions</div>
+  <div class="p-card">
+    <div class="p-formgrid">
+      <label>Search Method:</label><select><option>Recent transactions</option><option>By card number</option><option>By terminal</option><option>By transaction number</option></select>
+      <label>Card Number:</label><input placeholder="(optional)">
+      <label>Terminal ID:</label><input placeholder="(optional)"><label>Number of records:</label><select><option>50</option><option>100</option><option>1000</option></select>
+      <label>From Date:</label><input value="2014-07-27"><label>To Date:</label><input value="2014-07-27">
+    </div>
+    <div style="margin-top:14px;display:flex;gap:8px"><button class="p-btn" onclick="PMENU='results';portalRender()">Search</button><button class="p-btn sec" onclick="ofReset(this)">Reset</button></div>
+  </div>
+  ${showResults?`<div class="p-h">Results — ${TXNS.length} transaction(s)</div><div class="p-card" style="padding:0">
+    <table class="ptable"><thead><tr><th>Date / Time</th><th>Type</th><th>PAN</th><th>Amount</th><th>Terminal</th><th>Node</th><th>Response</th></tr></thead><tbody>${rows}</tbody></table>
+    <div style="padding:8px 12px;font-size:11px;color:#5a6b80">Click a Date/Time link to open the Transaction Detail.</div></div>`:''}`;
+}
+function portalDetail(){
+  const t=TXNS.find(x=>x.no===window._selTxn)||TXNS[0];
+  const tab=window._dtab||'details';
+  const reveal=window._sens?t.pan.replace(/\*/g,(function(){let i=0;const real="0018260000";return ()=>real[i++]||"0";})()):t.pan;
+  const pan=window._sens?t.pan.slice(0,6)+t.pan.slice(6).replace(/\*/g,'#'):t.pan;
+  const T=(id,l)=>`<div class="t ${tab===id?'on':''}" onclick="window._dtab='${id}';portalRender()">${l}</div>`;
+  const KV=rows=>`<table class="ptable"><tbody>${rows.map(r=>`<tr><th style="width:230px">${r[0]}</th><td>${r[1]}</td></tr>`).join('')}</tbody></table>`;
+  let panel='';
+  if(tab==='details') panel=KV([["Office transaction number",t.no.replace('OF','')],["Office transaction log no.",t.no],["Realtime transaction no.",t.no.replace('OF','55')],["Realtime log","RT-"+t.no.replace('OF','')],["Message type (MTI)",t.mti],["Transaction type",t.type],["Source / sink node","ProcessorSrc / "+t.node],["PAN",t.pan]])+`<div style="font-weight:700;color:#1c4f8f;margin:12px 0 5px">Account</div>`+KV([["Account type","Savings"],["Account number","00000018"],["Issuer","BlueBank"]]);
+  else if(tab==='amounts') panel=KV([["Transaction amount (F4)",t.amt+" "+t.cur],["Fee",t.cur+" 0.00"],["Settlement amount",t.amt+" "+t.cur],["Settlement date (F15)","0727"]]);
+  else if(tab==='auth') panel=KV([["Response code (F39)",t.rc+" — "+t.resp],["Authorization ID (F38)",t.rc==='00'?'A1B2C3':'—'],["Authorized by",t.node==='StandIn'?'PostCard stand-in (issuer)':'Issuer / network']]);
+  else if(tab==='datetime') panel=KV([["Transmission date/time (F7)","0727"+t.date.slice(11).replace(/:/g,'')],["Local date/time",t.date],["Settlement date","0727"]]);
+  else if(tab==='terminal') panel=KV([["Card acceptor terminal (F41)",t.term],["Card acceptor name",(({"ATM00001":"BlueBank HQ Lobby","ATM00002":"BlueBank Ikeja"})[t.term])||t.term],["POS entry mode (F22)","021 (magstripe, PIN)"],["Currency (F49)",t.cur]]);
+  else if(tab==='additional') panel=KV([["Check / cheque data","—"],["Address verification (AVS)","Not performed"]]);
+  else if(tab==='icc') panel=KV([["ICC / EMV","Magstripe transaction — no ICC data"],["Application (AID)","—"],["ARQC","—"]]);
+  else if(tab==='structured') panel=KV([["S1 structured data (F127)","present"],["Subfield 2 (switch key)",t.no],["Subfield 14 (terminal)",t.term]]);
+  else if(tab==='retention') panel=KV([["Retention data","Stored in Realtime DB for later analysis"],["Retention period","30 days"]]);
+  else panel=KV([["Extract data","Saved by NetworkExtract plug-in"],["Extract status",t.rc==='00'?"Closed (extracted)":"Open"]]);
+  const tabs=[['details','Details'],['amounts','Amounts'],['auth','Authorizations'],['datetime','Date and Time'],['terminal','Terminal'],['additional','Additional Data'],['icc','ICC Data'],['structured','Structured Data'],['retention','Retention Data'],['extract','Extract Data']];
+  return `<div class="crumb">Transactions › Find Recent Transactions › <b>Transaction Detail</b></div>
+  <div class="detailbtns"><button class="p-btn sec" onclick="PMENU='results';portalRender()">‹ Back</button><button class="p-btn sec" onclick="ofNav(-1)">Previous Transaction</button><button class="p-btn sec" onclick="ofNav(1)">Next Transaction</button><button class="p-btn sec" onclick="ofSensitive(this)">${window._sens?'Hide':'Show'} Sensitive Fields</button></div>
+  <div class="p-h">Office Transaction Number : ${t.no.replace('OF','')} <span class="howto">HowTo ?</span></div>
+  <div class="p-card">
+    <div class="chain"><div class="leg"><div class="lt">Origin: ProcessorSrc</div><div class="ld">${t.date}</div></div><div class="ar">&rarr;</div><div class="leg"><div class="lt">Online System</div><div class="ld">Transaction Manager · ${t.mti}</div></div><div class="ar">&rarr;</div><div class="leg"><div class="lt">Destination: ${t.node}</div><div class="ld">${t.resp}</div></div></div>
+    <div class="tabrow">${tabs.map(x=>T(x[0],x[1])).join('')}</div>
+    ${panel}
+  </div>`;
+}
+function ofNav(d){ const i=TXNS.findIndex(x=>x.no===window._selTxn); const n=(i+d+TXNS.length)%TXNS.length; window._selTxn=TXNS[n].no; portalRender(); }
+function ofSensitive(b){ window._sens=!window._sens; portalRender(); }
+function portalBatches(){
+  return `<div class="p-h">Transactions — View Transaction Batches</div><div class="p-card" style="padding:0">
+  <table class="ptable"><thead><tr><th>Node</th><th>Batch Number</th><th>Business Date</th><th>Begin</th><th>End</th><th>Status</th></tr></thead><tbody>
+  <tr class="grow"><td>StandIn (sink)</td><td>0727</td><td>2014-07-27</td><td>00:00</td><td>—</td><td><span class="pill ok">Open</span></td></tr>
+  <tr class="grow"><td>PostBridge (sink)</td><td>0727</td><td>2014-07-27</td><td>00:00</td><td>23:59</td><td><span class="pill no">Closed</span></td></tr>
+  <tr class="grow"><td>AtmApp-01 (source)</td><td>0727</td><td>2014-07-27</td><td>00:00</td><td>—</td><td><span class="pill ok">Open</span></td></tr>
+  </tbody></table><div style="padding:8px 12px;font-size:11px;color:#5a6b80">Note: this view does not display batch totals.</div></div>`;
+}
+function portalReports(){
+  return `<div class="p-h">Reports</div><div class="p-card">
+  <div class="p-formgrid"><label>Report:</label><select><option>S101 — Transaction Volumes</option><option>S204 — Settlement Summary</option><option>Recon Exceptions</option></select>
+  <label>Business date:</label><input value="2014-07-27"><label>Format:</label><select><option>HTML (Portal)</option><option>PDF</option><option>CSV</option></select></div>
+  <div style="margin-top:14px"><button class="p-btn" onclick="runReportP(this)">Run Report</button></div>
+  <div class="p-h" style="margin-top:16px">S101 — Transaction Volumes</div>
+  <table class="ptable"><thead><tr><th>Type</th><th>Count</th><th>Approved</th><th>Declined</th></tr></thead><tbody>
+  <tr><td>Cash Withdrawal</td><td>4</td><td>3</td><td>1</td></tr><tr><td>Balance Inquiry</td><td>1</td><td>1</td><td>0</td></tr>
+  <tr><td>Purchase</td><td>1</td><td>1</td><td>0</td></tr><tr><td>Reversal</td><td>1</td><td>1</td><td>0</td></tr></tbody></table></div>`;
+}
+
+/* ===== working CTAs ===== */
+function copyLogDetails(b){ const el=document.getElementById('logdesc'); const t=el?el.innerText:''; try{ if(navigator.clipboard) navigator.clipboard.writeText(t); }catch(e){} b.textContent='Copied to clipboard ✓'; setTimeout(()=>b.textContent='Copy Details to Clipboard',1600); }
+function genReportC(b){ const o=b.textContent; b.textContent='Generating…'; setTimeout(()=>{ b.textContent='Report generated ✓'; setTimeout(()=>b.textContent=o,1800); },600); }
+function ofReset(b){ const c=b.closest('.p-card'); if(c) c.querySelectorAll('input').forEach(i=>i.value=''); }
+function runReportP(b){ const o=b.textContent; b.textContent='Running…'; setTimeout(()=>{ b.textContent='Report ready ✓'; setTimeout(()=>b.textContent=o,1800); },600); }
+
+</script>
+</body></html>

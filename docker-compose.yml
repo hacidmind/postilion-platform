@@ -1,0 +1,12 @@
+services:
+  postswitch:
+    build: .
+    container_name: postswitch
+    ports:
+      - "4000:4000"
+    environment:
+      - PORT=4000
+      - DB_PATH=/app/server/data/postilion.db
+    volumes:
+      - ./server/data:/app/server/data   # persist the SQLite database
+    restart: unless-stopped
